@@ -1,6 +1,5 @@
 import Providers from "@/components/utilities/providers";
 
-
 export default function MainLayout({
   children,
 }: Readonly<{

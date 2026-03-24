@@ -1,11 +1,12 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Share2 } from "lucide-react";
 
 import { useServer } from "@/hooks/servers/useServer";
-import { ServerWelcome } from "@/components/messages/server-welcome";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +15,7 @@ export default function ServerPage() {
   const serverId = Array.isArray(rawServerId) ? rawServerId[0] : rawServerId;
 
   const {
-    data,
+    data: server,
     isLoading,
     isError,
     error,
@@ -29,7 +30,7 @@ export default function ServerPage() {
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          Select a server from the sidebar to continue.
+          Explore modules on the dashboard to get started.
         </p>
       </div>
     );
@@ -39,20 +40,13 @@ export default function ServerPage() {
     return <ServerPageSkeleton />;
   }
 
-  if (isError) {
+  if (isError || !server) {
     return (
       <ErrorState
-        message={error?.message ?? "We couldn't load this server."}
-        onRetry={() => refetch()}
-        isLoading={isFetching}
-      />
-    );
-  }
-
-  if (!data) {
-    return (
-      <ErrorState
-        message="We couldn’t find that server. It may have been removed or you no longer have access."
+        message={
+          error?.message ??
+          "We couldn’t find that module. It may have been removed or you no longer have access."
+        }
         onRetry={() => refetch()}
         isLoading={isFetching}
       />
@@ -60,36 +54,53 @@ export default function ServerPage() {
   }
 
   return (
-    <ServerWelcome
-      serverName={data.name}
-      description={`Explore channels in ${data.name} to start collaborating.`}
-    />
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-8">
+      <Card className="border-border/60">
+        <CardHeader className="space-y-3">
+          <CardDescription className="text-xs uppercase tracking-[0.3em] text-primary/70">
+            University module
+          </CardDescription>
+          <CardTitle className="text-3xl">{server.name}</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Stay aligned with your classmates by following announcements, assignments, and
+            discussions in this module’s channels.
+          </p>
+          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+            <Badge variant="outline" className="uppercase tracking-wide">
+              #{server.slug}
+            </Badge>
+            {server.type && (
+              <Badge variant="secondary" className="capitalize">
+                {server.type.replace(/-/g, " ")}
+              </Badge>
+            )}
+            {server.degreeId && (
+              <Badge variant="outline" className="font-mono">
+                Degree ID: {server.degreeId}
+              </Badge>
+            )}
+            {server.degreeModuleId && (
+              <Badge variant="outline" className="font-mono">
+                Module ID: {server.degreeModuleId}
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" size="sm" className="gap-2">
+            <Share2 className="h-4 w-4" />
+            Share module link
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
 function ServerPageSkeleton() {
   return (
-    <div className="flex h-full items-center justify-center">
-      <div className="flex w-full max-w-2xl flex-col gap-6 px-6">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <Skeleton className="h-16 w-16 rounded-full" />
-          <Skeleton className="h-7 w-40" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {[0, 1, 2].map((key) => (
-            <div
-              key={key}
-              className="flex flex-col items-center gap-3 rounded-xl border border-border/40 bg-muted/20 p-6"
-            >
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-3 w-32" />
-              <Skeleton className="h-3 w-20" />
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 px-6 py-8">
+      <Skeleton className="h-44 w-full rounded-3xl" />
     </div>
   );
 }
