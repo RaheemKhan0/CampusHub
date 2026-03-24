@@ -1,0 +1,54 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: campus-mongo
+    ports:
+      - '27016:27017' # expose mongo on host 27016, keep default container port
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build:
+      context: ./backend/ # adjust if compose file is not inside backend repo
+      target: dev
+    container_name: campus-api
+    ports:
+      - '4000:4000'
+    environment:
+      PORT: 4000
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+    depends_on:
+      - mongo
+    env_file:
+      - ./backend/.env
+
+  frontend:
+    build:
+      context: ./frontend/
+      target: dev
+      args:
+        API_SPEC_URL: http://campus-api:4000/api-json
+    container_name: campus-web
+    environment:
+      # Often needed on Docker Desktop so file changes are seen
+      CHOKIDAR_USEPOLLING: 'true'
+      WATCHPACK_POLLING: 'true'
+      API_SPEC_URL: "http://campus-api:4000/api-json"
+      NEXT_PUBLIC_API_URL : "http://localhost:4000"
+
+    ports:
+      - '3000:3000'
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    depends_on:
+      - backend
+    env_file:
+      - ./frontend/.env
+
+volumes:
+  mongo_data:
+  backend_node_modules:
+  frontend_node_modules:
