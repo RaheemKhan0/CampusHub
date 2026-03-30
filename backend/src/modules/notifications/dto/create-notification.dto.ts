@@ -1,5 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+  IsEnum,
+  IsISO8601,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 import {
   NotificationTypes,
@@ -42,10 +49,29 @@ export class CreateNotificationDto {
   body?: string;
 
   @ApiProperty({
+    description: 'Actor user id triggering the notification',
+    example: 'usr_01hxt8zshm8yc6a5n8s6k1qabc',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  actorId?: string;
+
+  @ApiProperty({
     description: 'Structured context payload (server/channel/message ids)',
     required: false,
+    type: 'object',
   })
   @IsOptional()
   @IsObject()
   data?: Record<string, unknown>;
+
+  @ApiProperty({
+    description: 'Expiry timestamp; notification auto-deletes afterwards',
+    example: '2024-05-20T00:00:00.000Z',
+    required: false,
+  })
+  @IsOptional()
+  @IsISO8601()
+  expiresAt?: string;
 }
