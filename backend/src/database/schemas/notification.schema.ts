@@ -8,7 +8,10 @@ import {
 
 export interface INotification extends Document {
   userId: string; // Better Auth user id of the recipient
+  actorId?: string; // Better Auth actor id of the invoker of the notification
   type: NotificationType;
+  title: string;
+  body?: string;
   data: Record<string, unknown>;
   status: NotificationStatus;
   readAt?: Date;
@@ -21,11 +24,14 @@ export interface INotification extends Document {
 const NotificationSchema = new Schema<INotification>(
   {
     userId: { type: String, required: true, index: true },
+    actorId: { type: String },
     type: {
       type: String,
       required: true,
       enum: NotificationTypes as unknown as string[],
     },
+    title: { type: String, required: true },
+    body: { type: String },
     data: { type: Schema.Types.Mixed, default: {} },
     status: {
       type: String,
