@@ -206,15 +206,18 @@ export default function ChannelPage() {
   }
 
   return (
-    <MessagePanel
-      channelName={channelQuery.data.name}
-      channelTopic={channelQuery.data.name}
-      messages={optimisticMessages}
-      isLoading={messagesQuery.isFetchingNextPage}
-      emptyStateHint={`No messages yet in #${channelQuery.data.name}. Start the conversation!`}
-      onRetry={() => void messagesQuery.refetch()}
-      onSend={handleSend}
-    />
+    <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
+      <MessagePanel
+        channelName={channelQuery.data.name}
+        channelTopic={channelQuery.data.topic}
+        messages={optimisticMessages}
+        isLoading={messagesQuery.isFetchingNextPage}
+        emptyStateHint={`No messages yet in #${channelQuery.data.name}. Start the conversation!`}
+        onRetry={() => void messagesQuery.refetch()}
+        onSend={handleSend}
+        className="h-full w-full"
+      />
+    </div>
   );
 }
 

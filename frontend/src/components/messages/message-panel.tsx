@@ -75,7 +75,7 @@ export function MessagePanel({
   return (
     <div
       className={cn(
-        "flex h-screen flex-col rounded-xl border border-border/50 bg-background/95 shadow-md",
+        "flex h-full w-full flex-1 flex-col bg-background",
         className,
       )}
     >

@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { UniversityModulesSection } from "./university-modules";
 
 export function DashboardWelcome() {
   return (
@@ -47,6 +48,8 @@ export function DashboardWelcome() {
         </div>
         <div className="pointer-events-none absolute -right-16 -top-12 hidden size-44 rounded-full bg-primary/20 blur-3xl md:block" />
       </section>
+
+      <UniversityModulesSection />
 
       <section className="grid gap-4 md:grid-cols-3">
         <InsightCard
