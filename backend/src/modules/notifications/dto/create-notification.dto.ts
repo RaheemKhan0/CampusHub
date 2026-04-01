@@ -60,7 +60,6 @@ export class CreateNotificationDto {
   @ApiProperty({
     description: 'Structured context payload (server/channel/message ids)',
     required: false,
-    type: 'object',
   })
   @IsOptional()
   @IsObject()
