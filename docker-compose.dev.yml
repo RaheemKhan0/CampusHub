@@ -6,6 +6,9 @@ services:
       - '27016:27017' # expose mongo on host 27016, keep default container port
     volumes:
       - mongo_data:/data/db
+    command: >
+      mongod --quiet
+      --setParameter logComponentVerbosity='{"command":1}'
 
   backend:
     build:
