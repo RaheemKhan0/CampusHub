@@ -169,6 +169,7 @@ export class MessagesGateway {
     const socketData = client.data as { user?: GatewayUser } | undefined;
     const user = socketData?.user ?? null;
     if (!user?.id && enforce) {
+      console.log('[messages gateway]')
       throw new WsException('Unauthorized');
     }
     return user ?? { id: '' };
