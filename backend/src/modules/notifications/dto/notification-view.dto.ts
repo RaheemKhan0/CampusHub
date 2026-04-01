@@ -68,11 +68,7 @@ export class NotificationViewDto {
   @IsEnum(NotificationStatusTypes)
   status!: NotificationStatus;
 
-  @ApiPropertyOptional({
-    description: 'Structured context payload for clients',
-    type: 'object',
-    example: { serverId: 'srv_01', channelId: 'chn_01', messageId: 'msg_01' },
-  })
+  @ApiPropertyOptional()
   @IsOptional()
   @IsObject()
   data?: Record<string, unknown>;

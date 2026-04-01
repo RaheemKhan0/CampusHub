@@ -1,5 +1,5 @@
 import { UseGuards, UsePipes, Injectable, ValidationPipe } from "@nestjs/common";
-import { WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
+import { WebSocketGateway, WebSocketServer, WsException } from "@nestjs/websockets";
 import { NotificationService } from "./notification.service";
 import { WsAuthGuard } from "src/lib/guards/WsAuthGuard";
 import { Server, Socket } from 'socket.io';
@@ -23,7 +23,7 @@ type GatewaySocket = Socket & { data?: { user?: GatewayUser } };
     }),
 )
 @WebSocketGateway({
-  namespace: 'messages',
+  namespace: 'notifications',
   cors: {
     origin: (process.env.CORS_ORIGIN ?? DEFAULT_ORIGIN)
       .split(',')
@@ -40,12 +40,20 @@ export class NotificationGateway {
   server!: Server;
  
   handleConnection(client: GatewaySocket) {
-    
+      
   }
   handleDisconnect(client: GatewaySocket) {
 
   }
   
+  private getClientUser(client: GatewaySocket, enforce = true) : GatewayUser {
+    const socketData = client.data as { user ?: GatewayUser } | undefined;
+    const user = socketData?.user ?? null;
+    if (!user?.id && enforce) {
+      throw new WsException('unauthorized');
+    }
+    return user ?? { id : '' }
+  }
 
 }
 
