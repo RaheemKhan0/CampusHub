@@ -12,8 +12,16 @@ export type Role = (typeof RoleTypes)[number];
 export const ServerTypes = ['unimodules', 'citysocieties', 'personal'] as const;
 export type ServerType = (typeof ServerTypes)[number];
 
-export const NotificationTypes = ['mention', 'invite', 'system'] as const;
+export const NotificationTypes = [
+  'message.mention',
+  'channel.invite',
+  'membership.status',
+  'generic',
+] as const;
 export type NotificationType = (typeof NotificationTypes)[number];
+
+export const NotificationStatusTypes = ['unread', 'read'] as const;
+export type NotificationStatus = (typeof NotificationStatusTypes)[number];
 
 export const PRIVACY = ['public', 'hidden'] as const;
 
