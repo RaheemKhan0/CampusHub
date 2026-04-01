@@ -4,6 +4,7 @@ import {
   ArrowRight,
   CalendarRange,
   MessageSquareText,
+  UniversityIcon,
   UsersRound,
 } from "lucide-react";
 
@@ -23,9 +24,19 @@ export function DashboardWelcome() {
       <section className="relative overflow-hidden rounded-3xl border border-border/60 bg-gradient-to-br from-primary/10 via-background to-background p-8 shadow-sm">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/80">
-              Campus Hub Dashboard
-            </p>
+            <div className="flex items-center gap-3">
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <UniversityIcon className="h-6 w-6" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary/80">
+                  Campus Hub Dashboard
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Your university community, at a glance
+                </p>
+              </div>
+            </div>
             <h1 className="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
               Welcome back! Ready to catch up with your communities?
             </h1>
