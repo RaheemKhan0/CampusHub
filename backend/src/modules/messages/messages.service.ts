@@ -12,15 +12,17 @@ import { Messages } from 'src/database/schemas/message.schema';
 import { CreateMessageDto } from './dto/message-create.dto';
 import { MessageViewDto } from './dto/message-view.dto';
 import { MessageListResponseDto } from './dto/message-list-response.dto';
+import { NotificationService } from '../notifications/notification.service';
 
 const MAX_PAGE_SIZE = 100;
 
-type ChannelLean = Pick<IChannel, '_id'>;
+type ChannelLean = Pick<IChannel, '_id' | 'name'>;
 
 type MessageQueryParams = { page?: number; pageSize?: number };
 
 @Injectable()
 export class MessagesService {
+  constructor(private readonly notificationService: NotificationService) {}
   async createMessage(
     serverId: string,
     channelId: string,
@@ -44,7 +46,7 @@ export class MessagesService {
       _id: channelObjectId,
       serverId: serverObjectId,
     })
-      .select('_id')
+      .select('_id name')
       .lean<ChannelLean | null>();
     if (!channel) throw new NotFoundException('Channel not found');
 
@@ -63,6 +65,14 @@ export class MessagesService {
       mentions: dto.mentions ?? [],
       createdAt: now,
       updatedAt: now,
+    });
+
+    await this.notificationService.createNotification({
+      userId,
+      actorId: userId,
+      type: 'message.create',
+      title: channel.name ?? 'New message',
+      body: dto.content,
     });
 
     return this.toMessageView(createdMessage);
