@@ -8,6 +8,7 @@ import { ServerModule } from '../server/server.module';
 import { ChannelModule } from '../channels/channels.module';
 import { MessagesModule } from '../messages/messages.module';
 import { DegreeModule } from '../degrees/degree.module';
+import { NotificationsModule } from '../notifications/notification.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { DegreeModule } from '../degrees/degree.module';
     ChannelModule,
     MessagesModule,
     DegreeModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [
