@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Sse, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Sse, UseGuards, Logger } from '@nestjs/common';
 import { AuthGuard } from '@thallesp/nestjs-better-auth';
 import { NotificationService } from './notification.service';
 import { ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
@@ -11,6 +11,8 @@ import { map } from 'rxjs';
 @Controller('/notifications')
 @UseGuards(AuthGuard)
 export class NotificationContoller {
+  private readonly logger = new Logger(NotificationContoller.name);
+
   constructor(private readonly notifications: NotificationService) {}
 
   @Post()
@@ -30,6 +32,7 @@ export class NotificationContoller {
 
   @Sse('stream')
   stream(): Observable<MessageEvent> {
+    this.logger.debug('Client subscribed to /notifications/stream');
     return this.notifications.stream.pipe(
       map((payload): MessageEvent => ({
         data: JSON.stringify(payload.data),

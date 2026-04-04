@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
 import type { NotificationType } from 'src/database/types';
@@ -37,6 +37,7 @@ export type NotificationStreamEvent<T extends NotificationType = NotificationTyp
 
 @Injectable()
 export class NotificationService {
+  private readonly logger = new Logger(NotificationService.name);
   private readonly stream$ = new Subject<NotificationStreamEvent>();
 
   get stream(): Observable<NotificationStreamEvent> {
@@ -63,24 +64,30 @@ export class NotificationService {
   }
 
   emitMessageCreated(payload: MessageNotificationPayload) {
-    this.stream$.next({
+    const event: NotificationStreamEvent<'message.create'> = {
       event: 'message.create',
       data: payload,
-    });
+    };
+    this.logger.debug(`SSE emit: ${event.event}`, payload);
+    this.stream$.next(event);
   }
 
   emitMention(payload: MentionNotificationPayload) {
-    this.stream$.next({
+    const event: NotificationStreamEvent<'message.mention'> = {
       event: 'message.mention',
       data: payload,
-    });
+    };
+    this.logger.debug(`SSE emit: ${event.event}`, payload);
+    this.stream$.next(event);
   }
 
   emitNotificationCreated(notification: NotificationViewDto) {
-    this.stream$.next({
+    const event: NotificationStreamEvent<'generic'> = {
       event: 'generic',
       data: notification,
-    });
+    };
+    this.logger.debug(`SSE emit: ${event.event}`, notification);
+    this.stream$.next(event);
   }
 
   private toNotificationView(doc: INotification): NotificationViewDto {
