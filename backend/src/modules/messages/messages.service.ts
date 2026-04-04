@@ -13,6 +13,7 @@ import { CreateMessageDto } from './dto/message-create.dto';
 import { MessageViewDto } from './dto/message-view.dto';
 import { MessageListResponseDto } from './dto/message-list-response.dto';
 import { NotificationService } from '../notifications/notification.service';
+import { logger } from 'better-auth';
 
 const MAX_PAGE_SIZE = 100;
 
@@ -67,6 +68,7 @@ export class MessagesService {
       updatedAt: now,
     });
 
+    logger.info('[Messages Service] creating notification in the notification service');
     await this.notificationService.createNotification({
       userId,
       actorId: userId,
