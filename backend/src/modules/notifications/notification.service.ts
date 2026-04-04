@@ -82,8 +82,9 @@ export class NotificationService {
   }
 
   emitNotificationCreated(notification: NotificationViewDto) {
-    const event: NotificationStreamEvent<'generic'> = {
-      event: 'generic',
+    const eventName = (notification.type ?? 'generic') as NotificationStreamEvent['event'];
+    const event: NotificationStreamEvent = {
+      event: eventName,
       data: notification,
     };
     this.logger.debug(`SSE emit: ${event.event}`, notification);
