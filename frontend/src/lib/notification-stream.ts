@@ -44,6 +44,7 @@ function handleServerEvent<T extends NotificationEvent["type"]>(
   return (event) => {
     try {
       const data = JSON.parse(event.data);
+      console.debug(`[notifications] event ${type}`, data);
       notificationSubject.next({ type, data } as NotificationEvent);
     } catch (error) {
       console.warn("[notifications] failed to parse SSE payload", error);
