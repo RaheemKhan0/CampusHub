@@ -32,6 +32,7 @@ export function AppSidebar() {
   const params = useParams<{ serverId?: string }>();
   const pathname = usePathname();
   const router = useRouter();
+  const isHomeDashboard = pathname === "/dashboard";
   const serverIdParam = params?.serverId;
   const serverId = Array.isArray(serverIdParam)
     ? serverIdParam[0]
@@ -170,28 +171,33 @@ export function AppSidebar() {
     );
   };
 
+  const handleNavigateHome = () => {
+    router.push("/dashboard");
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   return (
     <Sidebar className={cn("flex-shrink-0 border-r border-border/40 dark:bg-[#121212]")}>
       <SidebarHeader className="border-b border-border/40">
-        <div className="space-y-1 px-1 text-sm">
-          <p className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground">
-            Module channels
-          </p>
-          <p className="text-base font-semibold text-foreground">
-            {server?.name ?? "Campus Hub"}
-          </p>
-        </div>
-        {serverId && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-2 self-start"
-            onClick={() => refetchChannels()}
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
-        )}
+        <button
+          type="button"
+          onClick={handleNavigateHome}
+          className="flex w-full items-center gap-3 rounded-xl border border-transparent px-1 py-1 transition hover:border-primary/40 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        >
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+            <UniversityIcon className="h-5 w-5" />
+          </span>
+          <div className="text-left leading-tight">
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+              Campus Hub
+            </p>
+            <p className="text-base font-semibold text-foreground">
+              {server?.name ?? "Home dashboard"}
+            </p>
+          </div>
+        </button>
       </SidebarHeader>
       <SidebarContent className="flex flex-col">
         <SidebarGroup className="flex-1 px-0">{bodyContent()}</SidebarGroup>

@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Campus Hub",
   description: "Connecting Platform for City Students",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

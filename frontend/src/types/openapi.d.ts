@@ -195,6 +195,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates notificaion in the database for the specified user */
+        post: operations["NotificationContoller_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NotificationContoller_stream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/sign-in/social": {
         parameters: {
             query?: never;
@@ -3429,9 +3462,9 @@ export interface components {
             /** @example 42 */
             total: number;
             /** @example 1 */
-            page: number;
+            page?: number;
             /** @example 20 */
-            pageSize: number;
+            pageSize?: number;
         };
         UpdateServerDto: {
             /**
@@ -3684,6 +3717,106 @@ export interface components {
             type: "undergraduate";
             modules: components["schemas"]["DegreeModuleViewDto"][];
         };
+        CreateNotificationDto: {
+            /**
+             * @description Recipient BetterAuth user id
+             * @example usr_01hxt8zshm8yc6a5n8s6k1qj3r
+             */
+            userId: string;
+            /**
+             * @description Notification type
+             * @example message.mention
+             * @enum {string}
+             */
+            type: "message.create" | "message.mention" | "channel.invite" | "membership.status" | "generic";
+            /**
+             * @description Primary title for display
+             * @example New mention in #freshers
+             */
+            title: string;
+            /**
+             * @description Optional body or preview text
+             * @example Alice mentioned you in #freshers
+             */
+            body?: string;
+            /**
+             * @description Actor user id triggering the notification
+             * @example usr_01hxt8zshm8yc6a5n8s6k1qabc
+             */
+            actorId?: string;
+            /** @description Structured context payload (server/channel/message ids) */
+            data?: Record<string, never>;
+            /**
+             * @description Expiry timestamp; notification auto-deletes afterwards
+             * @example 2024-05-20T00:00:00.000Z
+             */
+            expiresAt?: string;
+        };
+        NotificationViewDto: {
+            /**
+             * @description Notification identifier
+             * @example ntf_01hyf4a12x3n8zg9c0p7
+             */
+            id: string;
+            /**
+             * @description Recipient user id
+             * @example usr_01hxt8zshm8yc6a5n8s6k1qj3r
+             */
+            userId: string;
+            /**
+             * @description Actor user id if applicable
+             * @example usr_01hxt8zshm8yc6a5n8s6k1qabc
+             */
+            actorId?: string;
+            /**
+             * @description Notification type discriminator
+             * @example message.mention
+             * @enum {string}
+             */
+            type: "message.create" | "message.mention" | "channel.invite" | "membership.status" | "generic";
+            /**
+             * @description Display title
+             * @example New mention in #freshers
+             */
+            title: string;
+            /**
+             * @description Optional body/preview
+             * @example Alice mentioned you in #freshers
+             */
+            body?: string;
+            /**
+             * @description Current status
+             * @example unread
+             * @enum {string}
+             */
+            status: "unread" | "read";
+            data?: Record<string, never>;
+            /**
+             * @description Creation timestamp
+             * @example 2024-05-16T09:15:30.000Z
+             */
+            createdAt: string;
+            /**
+             * @description Last update timestamp
+             * @example 2024-05-16T09:15:30.000Z
+             */
+            updatedAt: string;
+            /**
+             * @description Read timestamp if set
+             * @example 2024-05-16T10:00:00.000Z
+             */
+            readAt?: string;
+            /**
+             * @description Seen timestamp for badge counts
+             * @example 2024-05-16T10:05:00.000Z
+             */
+            seenAt?: string;
+            /**
+             * @description Expiry timestamp (auto-clean via TTL)
+             * @example 2024-05-20T00:00:00.000Z
+             */
+            expiresAt?: string;
+        };
         User: {
             id?: string;
             name: string;
@@ -3770,6 +3903,14 @@ export interface operations {
             query?: {
                 /** @description free Text search */
                 q?: string;
+                /** @description Degree slug */
+                degreeSlug?: string;
+                /** @description Degree identifier */
+                degreeId?: string;
+                /** @description Student start year (calendar year) */
+                startYear?: number;
+                /** @description Boolean value to indicate if the query is paginated or not */
+                paginated?: boolean;
                 page?: number;
                 pageSize?: number;
                 /** @description Select Type  */
@@ -4082,6 +4223,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DegreeModuleViewDto"][];
+                };
+            };
+        };
+    };
+    NotificationContoller_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNotificationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationViewDto"];
+                };
+            };
+        };
+    };
+    NotificationContoller_stream: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
                 };
             };
         };

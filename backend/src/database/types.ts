@@ -13,6 +13,7 @@ export const ServerTypes = ['unimodules', 'citysocieties', 'personal'] as const;
 export type ServerType = (typeof ServerTypes)[number];
 
 export const NotificationTypes = [
+  'message.create',
   'message.mention',
   'channel.invite',
   'membership.status',
