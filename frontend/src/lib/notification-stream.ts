@@ -16,9 +16,17 @@ export type MentionNotificationPayload = MessageNotificationPayload & {
   mentionedUserId: string;
 };
 
-type NotificationEvent =
-  | { type: "message.create"; data: MessageNotificationPayload }
-  | { type: "message.mention"; data: MentionNotificationPayload }
+export type NotificationEvent =
+  | {
+      type: "message.create";
+      data: MessageNotificationPayload | NotificationViewDto;
+    }
+  | {
+      type: "message.mention";
+      data: MentionNotificationPayload | NotificationViewDto;
+    }
+  | { type: "channel.invite"; data: NotificationViewDto }
+  | { type: "membership.status"; data: NotificationViewDto }
   | { type: "generic"; data: NotificationViewDto };
 
 const notificationSubject = new Subject<NotificationEvent>();
@@ -31,8 +39,10 @@ let reconnectTimer: number | null = null;
 function buildStreamUrl() {
   if (typeof window === "undefined") return null;
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-  if (baseUrl == "") throw new Error("base url not defined");
+  const baseUrl =
+    process.env.NEXT_PUBLIC_API_URL && process.env.NEXT_PUBLIC_API_URL.length > 0
+      ? process.env.NEXT_PUBLIC_API_URL
+      : window.location.origin;
   const url = new URL("/notifications/stream", baseUrl);
 
   return url.toString();
@@ -60,6 +70,14 @@ function attachListeners(source: EventSource) {
   source.addEventListener(
     "message.mention",
     handleServerEvent("message.mention"),
+  );
+  source.addEventListener(
+    "channel.invite",
+    handleServerEvent("channel.invite"),
+  );
+  source.addEventListener(
+    "membership.status",
+    handleServerEvent("membership.status"),
   );
   source.addEventListener("generic", handleServerEvent("generic"));
 }
