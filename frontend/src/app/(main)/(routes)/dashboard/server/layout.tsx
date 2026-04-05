@@ -8,7 +8,7 @@ export default function ServerLayout({
 }>) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex h-screen w-full bg-background">
         <AppSidebar />
         <main className="flex w-full flex-1 flex-col overflow-hidden">
           <SidebarTrigger className="lg:hidden" />
