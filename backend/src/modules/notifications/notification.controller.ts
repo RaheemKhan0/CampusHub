@@ -4,9 +4,10 @@ import { NotificationService } from './notification.service';
 import { ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationViewDto } from './dto/notification-view.dto';
-import type { MessageEvent } from '@nestjs/common';
+import type { MessageEvent, Request } from '@nestjs/common';
+import { Req } from '@nestjs/common';
 import type { Observable } from 'rxjs';
-import { map } from 'rxjs';
+import { filter, map } from 'rxjs';
 
 @Controller('/notifications')
 @UseGuards(AuthGuard)
@@ -31,9 +32,27 @@ export class NotificationContoller {
   }
 
   @Sse('stream')
-  stream(): Observable<MessageEvent> {
-    this.logger.debug('Client subscribed to /notifications/stream');
+  stream(@Req() req: Request): Observable<MessageEvent> {
+    const currentUserId = (req as any).user?.id as string | undefined;
+    const currentUserName = (req as any).user?.name as string | undefined;
+    this.logger.debug(
+      `Client subscribed to /notifications/stream user=${currentUserId ?? 'unknown'} name=${currentUserName ?? 'unknown'}`,
+    );
     return this.notifications.stream.pipe(
+      filter((payload) => {
+        const actorId = (payload.data as any)?.actorId;
+        if (!currentUserId) {
+          this.logger.verbose('Rejecting SSE event because client userId is missing');
+          return false;
+        }
+        if (actorId && actorId === currentUserId) {
+          this.logger.verbose(
+            `Skipping SSE event for user=${currentUserId} because actorId matches`,
+          );
+          return false;
+        }
+        return true;
+      }),
       map((payload): MessageEvent => ({
         data: JSON.stringify(payload.data),
         type: payload.event,
