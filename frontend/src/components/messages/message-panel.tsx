@@ -321,12 +321,22 @@ type ComposerProps = {
 };
 
 function Composer({ value, onChange, onSubmit, isDisabled }: ComposerProps) {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      if (value.trim()) {
+        onSubmit();
+      }
+    }
+  };
+
   return (
     <div className="px-4 py-4">
       <div className="rounded-xl border border-border/60 bg-muted/20 p-2">
         <textarea
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Write a message..."
           rows={1}
           className="w-full resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"

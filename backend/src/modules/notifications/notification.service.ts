@@ -22,15 +22,17 @@ export type MentionNotificationPayload = MessageNotificationPayload & {
   mentionedUserId: string;
 };
 
+type NotificationEventType = NotificationType | 'generic';
+
 type NotificationPayloadMap = {
-  'message.create': MessageNotificationPayload;
-  'message.mention': MentionNotificationPayload;
+  'message.create': MessageNotificationPayload | NotificationViewDto;
+  'message.mention': MentionNotificationPayload | NotificationViewDto;
   'channel.invite': NotificationViewDto;
   'membership.status': NotificationViewDto;
   generic: NotificationViewDto;
 };
 
-export type NotificationStreamEvent<T extends NotificationType = NotificationType> = {
+export type NotificationStreamEvent<T extends NotificationEventType = NotificationEventType> = {
   event: T;
   data: NotificationPayloadMap[T];
 };
@@ -39,6 +41,9 @@ export type NotificationStreamEvent<T extends NotificationType = NotificationTyp
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
   private readonly stream$ = new Subject<NotificationStreamEvent>();
+  private readonly emittedNotificationIds = new Set<string>();
+  private readonly emittedNotificationQueue: string[] = [];
+  private readonly maxTrackedNotifications = 500;
 
   get stream(): Observable<NotificationStreamEvent> {
     return this.stream$.asObservable();
@@ -50,6 +55,9 @@ export class NotificationService {
     const notification = await Notification.create({
       userId: dto.userId,
       actorId: dto.actorId,
+      serverId: dto.serverId,
+      serverName: dto.serverName,
+      channelId: dto.channelId,
       type: dto.type,
       title: dto.title,
       body: dto.body,
@@ -82,6 +90,11 @@ export class NotificationService {
   }
 
   emitNotificationCreated(notification: NotificationViewDto) {
+    if (this.isDuplicateNotification(notification.id)) {
+      this.logger.debug(`Skipping duplicate notification ${notification.id}`);
+      return;
+    }
+
     const eventName = (notification.type ?? 'generic') as NotificationStreamEvent['event'];
     const event: NotificationStreamEvent = {
       event: eventName,
@@ -89,6 +102,25 @@ export class NotificationService {
     };
     this.logger.debug(`SSE emit: ${event.event}`, notification);
     this.stream$.next(event);
+  }
+
+  private isDuplicateNotification(id: string): boolean {
+    if (!id) return false;
+    if (this.emittedNotificationIds.has(id)) {
+      return true;
+    }
+
+    this.emittedNotificationIds.add(id);
+    this.emittedNotificationQueue.push(id);
+
+    if (this.emittedNotificationQueue.length > this.maxTrackedNotifications) {
+      const oldest = this.emittedNotificationQueue.shift();
+      if (oldest) {
+        this.emittedNotificationIds.delete(oldest);
+      }
+    }
+
+    return false;
   }
 
   private toNotificationView(doc: INotification): NotificationViewDto {
@@ -99,6 +131,9 @@ export class NotificationService {
       id: String(doc._id),
       userId: doc.userId,
       actorId: doc.actorId,
+      serverId: doc.serverId,
+      serverName: doc.serverName,
+      channelId: doc.channelId,
       type: doc.type,
       title: doc.title,
       body: doc.body,

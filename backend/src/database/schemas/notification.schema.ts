@@ -9,6 +9,9 @@ import {
 export interface INotification extends Document {
   userId: string; // Better Auth user id of the recipient
   actorId?: string; // Better Auth actor id of the invoker of the notification
+  serverId?: string;
+  serverName?: string;
+  channelId?: string;
   type: NotificationType;
   title: string;
   body?: string;
@@ -25,6 +28,9 @@ const NotificationSchema = new Schema<INotification>(
   {
     userId: { type: String, required: true, index: true },
     actorId: { type: String },
+    serverId: { type: String, index: true },
+    serverName: { type: String },
+    channelId: { type: String, index: true },
     type: {
       type: String,
       required: true,

@@ -37,6 +37,30 @@ export class NotificationViewDto {
   @IsString()
   actorId?: string;
 
+  @ApiPropertyOptional({
+    description: 'Server identifier associated with this notification',
+    example: 'srv_01hxt8zshm8yc6a5n8s6k1qz9x',
+  })
+  @IsOptional()
+  @IsString()
+  serverId?: string;
+
+  @ApiPropertyOptional({
+    description: 'Server name for display',
+    example: 'Physics 101',
+  })
+  @IsOptional()
+  @IsString()
+  serverName?: string;
+
+  @ApiPropertyOptional({
+    description: 'Channel identifier if the notification targets a channel',
+    example: 'chn_01hxt8zshm8yc6a5n8s6k1qy1m',
+  })
+  @IsOptional()
+  @IsString()
+  channelId?: string;
+
   @ApiProperty({
     description: 'Notification type discriminator',
     example: 'message.mention',
