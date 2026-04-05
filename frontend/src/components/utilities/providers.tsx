@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster, toast } from "sonner";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -37,28 +38,42 @@ const getNotificationKey = (event: NotificationEvent): string | undefined => {
 };
 
 const formatNotificationToast = (event: NotificationEvent) => {
-  if (isNotificationDto(event.data)) {
+  const data = event.data;
+
+  if (isNotificationDto(data)) {
     return {
-      title: event.data.title ?? "New notification",
-      description: event.data.body ?? undefined,
+      title: data.serverName ?? data.title ?? "New notification",
+      subtitle: data.title ? `#${data.title}` : undefined,
+      body: data.body,
+      serverId: data.serverId,
+      channelId: data.channelId,
     };
   }
 
-  if (isRecord(event.data)) {
-    const authorName =
-      typeof event.data.authorName === "string" ? event.data.authorName : undefined;
-    const channelHint =
-      typeof event.data.channelId === "string"
-        ? `Channel: ${event.data.channelId}`
-        : undefined;
+  if (isRecord(data)) {
+    const serverName =
+      typeof data.serverName === "string" ? data.serverName : undefined;
+    const channelId =
+      typeof data.channelId === "string" ? data.channelId : undefined;
+    const content =
+      typeof data.content === "string" ? data.content : undefined;
 
     return {
-      title: authorName ? `${authorName} sent a message` : "New message",
-      description: channelHint,
+      title: serverName ?? "New message",
+      subtitle: channelId ? `#${channelId}` : undefined,
+      body: content,
+      serverId: typeof data.serverId === "string" ? data.serverId : undefined,
+      channelId,
     };
   }
 
-  return { title: "New notification", description: undefined };
+  return {
+    title: "New notification",
+    subtitle: undefined,
+    body: undefined,
+    serverId: undefined,
+    channelId: undefined,
+  };
 };
 
 type HttpErrorLike = { status?: number };
@@ -85,6 +100,7 @@ const queryClient = new QueryClient({
   },
 });
 const Providers = ({ children }: { children: React.ReactNode }) => {
+  const router = useRouter();
   const seenNotificationsRef = useRef<{ set: Set<string>; queue: string[] }>(
     {
       set: new Set(),
@@ -118,10 +134,23 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         rememberNotificationKey(key);
       }
 
-      const { title, description } = formatNotificationToast(event);
+      const { title, subtitle, body, serverId: payloadServerId, channelId: payloadChannelId } =
+        formatNotificationToast(event);
       toast(title, {
-        description,
+        description: [subtitle, body].filter(Boolean).join(" • ") || undefined,
         id: key,
+        action: payloadServerId && payloadChannelId
+          ? {
+              label: "View",
+              onClick: () => {
+          },
+          }
+          : undefined,
+        onClick: () => {
+          if (payloadServerId && payloadChannelId) {
+            router.push(`/dashboard/server/${payloadServerId}/channel/${payloadChannelId}`);
+          }
+        },
       });
     });
 
