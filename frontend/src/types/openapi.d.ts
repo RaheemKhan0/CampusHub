@@ -144,6 +144,39 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates notificaion in the database for the specified user */
+        post: operations["NotificationContoller_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NotificationContoller_stream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/degrees": {
         parameters: {
             query?: never;
@@ -187,39 +220,6 @@ export interface paths {
         };
         /** List modules for a degree */
         get: operations["DegreeController_listModules"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Creates notificaion in the database for the specified user */
-        post: operations["NotificationContoller_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["NotificationContoller_stream"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3674,55 +3674,16 @@ export interface components {
              */
             hasMore: boolean;
         };
-        DegreeViewDto: {
-            /** @description Degree identifier */
-            id: string;
-            /** @description URL-friendly identifier */
-            slug: string;
-            /** @description Degree name */
-            name: string;
-            /** @description duration of the years */
-            durationYears: number;
-            /**
-             * @description type of degree
-             * @enum {string}
-             */
-            type: "undergraduate";
-        };
-        DegreeModuleViewDto: {
-            id: string;
-            moduleId: string;
-            title: string;
-            /** @enum {string} */
-            kind: "core" | "elective";
-            /** @enum {string} */
-            term?: "firstterm" | "secondterm" | "full-year";
-            year: number;
-            description?: string;
-            credits?: number;
-        };
-        DegreeDetailDto: {
-            /** @description Degree identifier */
-            id: string;
-            /** @description URL-friendly identifier */
-            slug: string;
-            /** @description Degree name */
-            name: string;
-            /** @description duration of the years */
-            durationYears: number;
-            /**
-             * @description type of degree
-             * @enum {string}
-             */
-            type: "undergraduate";
-            modules: components["schemas"]["DegreeModuleViewDto"][];
-        };
         CreateNotificationDto: {
             /**
              * @description Recipient BetterAuth user id
              * @example usr_01hxt8zshm8yc6a5n8s6k1qj3r
              */
             userId: string;
+            /** @description Channel identifier (if applicable) */
+            channelId?: string;
+            /** @description Server identifier (if applicable) */
+            serverId?: string;
             /**
              * @description Notification type
              * @example message.mention
@@ -3768,6 +3729,16 @@ export interface components {
              * @example usr_01hxt8zshm8yc6a5n8s6k1qabc
              */
             actorId?: string;
+            /**
+             * @description Server identifier associated with this notification
+             * @example srv_01hxt8zshm8yc6a5n8s6k1qz9x
+             */
+            serverId?: string;
+            /**
+             * @description Channel identifier if the notification targets a channel
+             * @example chn_01hxt8zshm8yc6a5n8s6k1qy1m
+             */
+            channelId?: string;
             /**
              * @description Notification type discriminator
              * @example message.mention
@@ -3816,6 +3787,49 @@ export interface components {
              * @example 2024-05-20T00:00:00.000Z
              */
             expiresAt?: string;
+        };
+        DegreeViewDto: {
+            /** @description Degree identifier */
+            id: string;
+            /** @description URL-friendly identifier */
+            slug: string;
+            /** @description Degree name */
+            name: string;
+            /** @description duration of the years */
+            durationYears: number;
+            /**
+             * @description type of degree
+             * @enum {string}
+             */
+            type: "undergraduate";
+        };
+        DegreeModuleViewDto: {
+            id: string;
+            moduleId: string;
+            title: string;
+            /** @enum {string} */
+            kind: "core" | "elective";
+            /** @enum {string} */
+            term?: "firstterm" | "secondterm" | "full-year";
+            year: number;
+            description?: string;
+            credits?: number;
+        };
+        DegreeDetailDto: {
+            /** @description Degree identifier */
+            id: string;
+            /** @description URL-friendly identifier */
+            slug: string;
+            /** @description Degree name */
+            name: string;
+            /** @description duration of the years */
+            durationYears: number;
+            /**
+             * @description type of degree
+             * @enum {string}
+             */
+            type: "undergraduate";
+            modules: components["schemas"]["DegreeModuleViewDto"][];
         };
         User: {
             id?: string;
@@ -4166,6 +4180,48 @@ export interface operations {
             };
         };
     };
+    NotificationContoller_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNotificationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationViewDto"];
+                };
+            };
+        };
+    };
+    NotificationContoller_stream: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
     DegreeController_listDegrees: {
         parameters: {
             query?: never;
@@ -4223,48 +4279,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DegreeModuleViewDto"][];
-                };
-            };
-        };
-    };
-    NotificationContoller_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateNotificationDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NotificationViewDto"];
-                };
-            };
-        };
-    };
-    NotificationContoller_stream: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
                 };
             };
         };

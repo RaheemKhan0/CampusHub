@@ -497,6 +497,59 @@
         ]
       }
     },
+    "/notifications": {
+      "post": {
+        "operationId": "NotificationContoller_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNotificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationViewDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Creates notificaion in the database for the specified user",
+        "tags": [
+          "NotificationContoller"
+        ]
+      }
+    },
+    "/notifications/stream": {
+      "get": {
+        "operationId": "NotificationContoller_stream",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "NotificationContoller"
+        ]
+      }
+    },
     "/degrees": {
       "get": {
         "operationId": "DegreeController_listDegrees",
@@ -584,59 +637,6 @@
         "summary": "List modules for a degree",
         "tags": [
           "degrees"
-        ]
-      }
-    },
-    "/notifications": {
-      "post": {
-        "operationId": "NotificationContoller_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateNotificationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotificationViewDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Creates notificaion in the database for the specified user",
-        "tags": [
-          "NotificationContoller"
-        ]
-      }
-    },
-    "/notifications/stream": {
-      "get": {
-        "operationId": "NotificationContoller_stream",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "NotificationContoller"
         ]
       }
     },
@@ -5740,6 +5740,163 @@
           "hasMore"
         ]
       },
+      "CreateNotificationDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Recipient BetterAuth user id",
+            "example": "usr_01hxt8zshm8yc6a5n8s6k1qj3r"
+          },
+          "channelId": {
+            "type": "string",
+            "description": "Channel identifier (if applicable)"
+          },
+          "serverId": {
+            "type": "string",
+            "description": "Server identifier (if applicable)"
+          },
+          "type": {
+            "type": "string",
+            "description": "Notification type",
+            "example": "message.mention",
+            "enum": [
+              "message.create",
+              "message.mention",
+              "channel.invite",
+              "membership.status",
+              "generic"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Primary title for display",
+            "example": "New mention in #freshers"
+          },
+          "body": {
+            "type": "string",
+            "description": "Optional body or preview text",
+            "example": "Alice mentioned you in #freshers"
+          },
+          "actorId": {
+            "type": "string",
+            "description": "Actor user id triggering the notification",
+            "example": "usr_01hxt8zshm8yc6a5n8s6k1qabc"
+          },
+          "data": {
+            "type": "object",
+            "description": "Structured context payload (server/channel/message ids)"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiry timestamp; notification auto-deletes afterwards",
+            "example": "2024-05-20T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "userId",
+          "type",
+          "title"
+        ]
+      },
+      "NotificationViewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Notification identifier",
+            "example": "ntf_01hyf4a12x3n8zg9c0p7"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Recipient user id",
+            "example": "usr_01hxt8zshm8yc6a5n8s6k1qj3r"
+          },
+          "actorId": {
+            "type": "string",
+            "description": "Actor user id if applicable",
+            "example": "usr_01hxt8zshm8yc6a5n8s6k1qabc"
+          },
+          "serverId": {
+            "type": "string",
+            "description": "Server identifier associated with this notification",
+            "example": "srv_01hxt8zshm8yc6a5n8s6k1qz9x"
+          },
+          "channelId": {
+            "type": "string",
+            "description": "Channel identifier if the notification targets a channel",
+            "example": "chn_01hxt8zshm8yc6a5n8s6k1qy1m"
+          },
+          "type": {
+            "type": "string",
+            "description": "Notification type discriminator",
+            "example": "message.mention",
+            "enum": [
+              "message.create",
+              "message.mention",
+              "channel.invite",
+              "membership.status",
+              "generic"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Display title",
+            "example": "New mention in #freshers"
+          },
+          "body": {
+            "type": "string",
+            "description": "Optional body/preview",
+            "example": "Alice mentioned you in #freshers"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status",
+            "enum": [
+              "unread",
+              "read"
+            ],
+            "example": "unread"
+          },
+          "data": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-05-16T09:15:30.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2024-05-16T09:15:30.000Z"
+          },
+          "readAt": {
+            "type": "string",
+            "description": "Read timestamp if set",
+            "example": "2024-05-16T10:00:00.000Z"
+          },
+          "seenAt": {
+            "type": "string",
+            "description": "Seen timestamp for badge counts",
+            "example": "2024-05-16T10:05:00.000Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiry timestamp (auto-clean via TTL)",
+            "example": "2024-05-20T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "type",
+          "title",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
       "DegreeViewDto": {
         "type": "object",
         "properties": {
@@ -5860,145 +6017,6 @@
           "durationYears",
           "type",
           "modules"
-        ]
-      },
-      "CreateNotificationDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "description": "Recipient BetterAuth user id",
-            "example": "usr_01hxt8zshm8yc6a5n8s6k1qj3r"
-          },
-          "type": {
-            "type": "string",
-            "description": "Notification type",
-            "example": "message.mention",
-            "enum": [
-              "message.create",
-              "message.mention",
-              "channel.invite",
-              "membership.status",
-              "generic"
-            ]
-          },
-          "title": {
-            "type": "string",
-            "description": "Primary title for display",
-            "example": "New mention in #freshers"
-          },
-          "body": {
-            "type": "string",
-            "description": "Optional body or preview text",
-            "example": "Alice mentioned you in #freshers"
-          },
-          "actorId": {
-            "type": "string",
-            "description": "Actor user id triggering the notification",
-            "example": "usr_01hxt8zshm8yc6a5n8s6k1qabc"
-          },
-          "data": {
-            "type": "object",
-            "description": "Structured context payload (server/channel/message ids)"
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiry timestamp; notification auto-deletes afterwards",
-            "example": "2024-05-20T00:00:00.000Z"
-          }
-        },
-        "required": [
-          "userId",
-          "type",
-          "title"
-        ]
-      },
-      "NotificationViewDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Notification identifier",
-            "example": "ntf_01hyf4a12x3n8zg9c0p7"
-          },
-          "userId": {
-            "type": "string",
-            "description": "Recipient user id",
-            "example": "usr_01hxt8zshm8yc6a5n8s6k1qj3r"
-          },
-          "actorId": {
-            "type": "string",
-            "description": "Actor user id if applicable",
-            "example": "usr_01hxt8zshm8yc6a5n8s6k1qabc"
-          },
-          "type": {
-            "type": "string",
-            "description": "Notification type discriminator",
-            "example": "message.mention",
-            "enum": [
-              "message.create",
-              "message.mention",
-              "channel.invite",
-              "membership.status",
-              "generic"
-            ]
-          },
-          "title": {
-            "type": "string",
-            "description": "Display title",
-            "example": "New mention in #freshers"
-          },
-          "body": {
-            "type": "string",
-            "description": "Optional body/preview",
-            "example": "Alice mentioned you in #freshers"
-          },
-          "status": {
-            "type": "string",
-            "description": "Current status",
-            "enum": [
-              "unread",
-              "read"
-            ],
-            "example": "unread"
-          },
-          "data": {
-            "type": "object"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Creation timestamp",
-            "example": "2024-05-16T09:15:30.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Last update timestamp",
-            "example": "2024-05-16T09:15:30.000Z"
-          },
-          "readAt": {
-            "type": "string",
-            "description": "Read timestamp if set",
-            "example": "2024-05-16T10:00:00.000Z"
-          },
-          "seenAt": {
-            "type": "string",
-            "description": "Seen timestamp for badge counts",
-            "example": "2024-05-16T10:05:00.000Z"
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiry timestamp (auto-clean via TTL)",
-            "example": "2024-05-20T00:00:00.000Z"
-          }
-        },
-        "required": [
-          "id",
-          "userId",
-          "type",
-          "title",
-          "status",
-          "createdAt",
-          "updatedAt"
         ]
       },
       "User": {
