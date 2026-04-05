@@ -72,6 +72,8 @@ export class MessagesService {
     await this.notificationService.createNotification({
       userId,
       actorId: userId,
+      channelId,
+      serverId,
       type: 'message.create',
       title: channel.name ?? 'New message',
       body: dto.content,
