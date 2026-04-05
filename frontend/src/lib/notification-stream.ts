@@ -8,6 +8,7 @@ export type MessageNotificationPayload = {
   messageId: string;
   channelId: string;
   serverId: string;
+  serverName : string;
   authorId: string;
   authorName?: string;
 };
