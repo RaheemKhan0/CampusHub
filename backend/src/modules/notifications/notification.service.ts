@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import type { NotificationType } from 'src/database/types';
+import type { FilterQuery } from 'mongoose';
+import type { NotificationStatus, NotificationType } from 'src/database/types';
 import {
   Notification,
   type INotification,
@@ -44,6 +45,7 @@ export class NotificationService {
   private readonly emittedNotificationIds = new Set<string>();
   private readonly emittedNotificationQueue: string[] = [];
   private readonly maxTrackedNotifications = 500;
+  private readonly defaultListLimit = 50;
 
   get stream(): Observable<NotificationStreamEvent> {
     return this.stream$.asObservable();
@@ -69,6 +71,23 @@ export class NotificationService {
     this.emitNotificationCreated(view);
 
     return view;
+  }
+
+  async listNotifications(
+    userId: string,
+    options?: { status?: NotificationStatus; limit?: number },
+  ): Promise<NotificationViewDto[]> {
+    const filter: FilterQuery<INotification> = { userId };
+    if (options?.status) {
+      filter.status = options.status;
+    }
+
+    const docs = await Notification.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(options?.limit ?? this.defaultListLimit)
+      .lean<INotification[]>();
+
+    return docs.map((doc) => this.toNotificationView(doc));
   }
 
   emitMessageCreated(payload: MessageNotificationPayload) {

@@ -1,7 +1,7 @@
-import { Body, Controller, Post, Sse, UseGuards, Logger } from '@nestjs/common';
-import { AuthGuard } from '@thallesp/nestjs-better-auth';
+import { Body, Controller, Get, Post, Sse, UseGuards, Logger } from '@nestjs/common';
+import { AuthGuard, Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { NotificationService } from './notification.service';
-import { ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationViewDto } from './dto/notification-view.dto';
 import type { MessageEvent, Request } from '@nestjs/common';
@@ -28,6 +28,15 @@ export class NotificationContoller {
       title: dto.title,
       body: dto.body,
       actorId: dto.actorId,
+    });
+  }
+
+  @Get('unread')
+  @ApiOperation({ summary: 'List unread notifications for the current user' })
+  @ApiOkResponse({ type: NotificationViewDto, isArray: true })
+  async listUnread(@Session() session: UserSession) {
+    return this.notifications.listNotifications(session.user.id, {
+      status: 'unread',
     });
   }
 
