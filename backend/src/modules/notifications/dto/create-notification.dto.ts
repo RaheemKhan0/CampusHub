@@ -8,10 +8,7 @@ import {
   IsString,
 } from 'class-validator';
 
-import {
-  NotificationTypes,
-  type NotificationType,
-} from 'src/database/types';
+import { NotificationTypes, type NotificationType } from 'src/database/types';
 
 export class CreateNotificationDto {
   @ApiProperty({
@@ -21,6 +18,22 @@ export class CreateNotificationDto {
   @IsString()
   @IsNotEmpty()
   userId!: string;
+
+  @ApiProperty({
+    description: 'Channel identifier (if applicable)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  channelId?: string;
+
+  @ApiProperty({
+    description: 'Server identifier (if applicable)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  serverId?: string;
 
   @ApiProperty({
     description: 'Notification type',
