@@ -5756,6 +5756,10 @@
             "type": "string",
             "description": "Server identifier (if applicable)"
           },
+          "serverName": {
+            "type": "string",
+            "description": "Server name (if applicable)"
+          },
           "type": {
             "type": "string",
             "description": "Notification type",
@@ -5821,6 +5825,11 @@
             "type": "string",
             "description": "Server identifier associated with this notification",
             "example": "srv_01hxt8zshm8yc6a5n8s6k1qz9x"
+          },
+          "serverName": {
+            "type": "string",
+            "description": "Server name for display",
+            "example": "Physics 101"
           },
           "channelId": {
             "type": "string",

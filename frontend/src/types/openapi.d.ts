@@ -3684,6 +3684,8 @@ export interface components {
             channelId?: string;
             /** @description Server identifier (if applicable) */
             serverId?: string;
+            /** @description Server name (if applicable) */
+            serverName?: string;
             /**
              * @description Notification type
              * @example message.mention
@@ -3734,6 +3736,11 @@ export interface components {
              * @example srv_01hxt8zshm8yc6a5n8s6k1qz9x
              */
             serverId?: string;
+            /**
+             * @description Server name for display
+             * @example Physics 101
+             */
+            serverName?: string;
             /**
              * @description Channel identifier if the notification targets a channel
              * @example chn_01hxt8zshm8yc6a5n8s6k1qy1m
