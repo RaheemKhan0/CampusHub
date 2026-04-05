@@ -529,6 +529,31 @@
         ]
       }
     },
+    "/notifications/unread": {
+      "get": {
+        "operationId": "NotificationContoller_listUnread",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationViewDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List unread notifications for the current user",
+        "tags": [
+          "NotificationContoller"
+        ]
+      }
+    },
     "/notifications/stream": {
       "get": {
         "operationId": "NotificationContoller_stream",
