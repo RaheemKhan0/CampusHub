@@ -75,7 +75,7 @@ export function MessagePanel({
   return (
     <div
       className={cn(
-        "flex h-full w-full flex-1 flex-col bg-background",
+        "flex h-screen w-full flex-1 flex-col bg-background overflow-hidden",
         className,
       )}
     >
@@ -83,7 +83,7 @@ export function MessagePanel({
         <Header channelName={channelName} channelTopic={channelTopic} />
         <Separator />
       </div>
-      <div ref={listRef} className="flex-1 overflow-y-auto px-4 py-6">
+      <div ref={listRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-6">
         {isLoading || isPending ? (
           <LoadingState />
         ) : sortedMessages.length === 0 ? (
@@ -128,21 +128,23 @@ type HeaderProps = {
 
 function Header({ channelName, channelTopic }: HeaderProps) {
   return (
-    <header className="flex items-start justify-between gap-3 px-5 py-4">
+    <header className="flex items-center justify-between gap-3 px-4 py-3">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">
+        <h2 className="text-base font-semibold text-foreground">
           <span className="text-primary">#</span>
           {channelName}
         </h2>
         {channelTopic ? (
-          <p className="text-sm text-muted-foreground">{channelTopic}</p>
+          <p className="text-xs text-muted-foreground line-clamp-1 max-w-[360px]">
+            {channelTopic}
+          </p>
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Real-time updates and resource sharing for this channel.
           </p>
         )}
       </div>
-      <Button variant="outline" size="sm" className="gap-2">
+      <Button variant="outline" size="xs" className="gap-1 text-xs">
         <MessageSquarePlus className="h-4 w-4" />
         New thread
       </Button>
@@ -224,7 +226,7 @@ function MessageRow({
               Edited
             </span>
           )}
-         
+
         </div>
         {message.attachments && message.attachments.length > 0 && (
           <div
@@ -331,29 +333,28 @@ function Composer({ value, onChange, onSubmit, isDisabled }: ComposerProps) {
   };
 
   return (
-    <div className="px-4 py-4">
-      <div className="rounded-xl border border-border/60 bg-muted/20 p-2">
-        <textarea
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Write a message..."
-          rows={1}
-          className="w-full resize-none bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
-          disabled={isDisabled}
-        />
-        <div className="mt-3 flex items-center justify-end gap-2">
-          <Button
-            type="button"
-            size="sm"
-            className="gap-2"
-            disabled={isDisabled || !value.trim()}
-            onClick={onSubmit}
-          >
-            <SendHorizontal className="h-4 w-4" />
-            Send
-          </Button>
+    <div className="px-4 py-3">
+      <div className="flex items-end gap-3">
+        <div className="flex-1 rounded-lg border border-border/60 bg-muted/20 px-3 py-2">
+          <textarea
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Write a message..."
+            rows={1}
+            className="w-full resize-none bg-transparent text-sm leading-relaxed text-foreground outline-none placeholder:text-muted-foreground"
+            disabled={isDisabled}
+          />
         </div>
+        <Button
+          type="button"
+          size="icon"
+          className="gap-2"
+          disabled={isDisabled || !value.trim()}
+          onClick={onSubmit}
+        >
+          <SendHorizontal className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );
