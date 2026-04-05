@@ -36,6 +36,14 @@ export class CreateNotificationDto {
   serverId?: string;
 
   @ApiProperty({
+    description: 'Server name (if applicable)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  serverName?: string;
+
+  @ApiProperty({
     description: 'Notification type',
     example: 'message.mention',
     enum: NotificationTypes,
