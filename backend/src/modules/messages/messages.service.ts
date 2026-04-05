@@ -14,10 +14,13 @@ import { MessageViewDto } from './dto/message-view.dto';
 import { MessageListResponseDto } from './dto/message-list-response.dto';
 import { NotificationService } from '../notifications/notification.service';
 import { logger } from 'better-auth';
+import type { IServer } from 'src/database/schemas/server.schema';
+import { ServerModel } from 'src/database/schemas/server.schema';
 
 const MAX_PAGE_SIZE = 100;
 
 type ChannelLean = Pick<IChannel, '_id' | 'name'>;
+type ServerLean = Pick<IServer, '_id' | 'name'>;
 
 type MessageQueryParams = { page?: number; pageSize?: number };
 
@@ -42,6 +45,13 @@ export class MessagesService {
 
     const channelObjectId = new Types.ObjectId(channelId);
     const serverObjectId = new Types.ObjectId(serverId);
+
+    const server = await ServerModel.findOne({
+      _id: serverObjectId,
+    })
+      .select('_id name')
+      .lean<ServerLean | null>();
+    if (!server) throw new NotFoundException('Server not found');
 
     const channel = await Channel.findOne({
       _id: channelObjectId,
@@ -74,6 +84,7 @@ export class MessagesService {
       actorId: userId,
       channelId,
       serverId,
+      serverName: server.name,
       type: 'message.create',
       title: channel.name ?? 'New message',
       body: dto.content,
