@@ -109,7 +109,7 @@ function NotificationItem({ notification }: NotificationItemProps) {
       </p>
       {notification.channelId ? (
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
-          #{notification.channelId}
+          #{notification.title}
         </p>
       ) : null}
       {notification.body ? (
