@@ -11,16 +11,19 @@ import {
 } from "@/lib/notification-stream";
 import type { NotificationEvent } from "@/lib/notification-stream";
 import type { components } from "@/types/openapi";
+import { queryKeys } from "@/lib/query-keys";
 
-type NotificationViewDto = components["schemas"]["NotificationViewDto"];
+type NotificationView = components["schemas"]["NotificationViewDto"];
 
 const MAX_TRACKED_CLIENT_NOTIFICATIONS = 200;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const isNotificationDto = (value: unknown): value is NotificationViewDto =>
-  isRecord(value) && typeof value.id === "string" && typeof value.userId === "string";
+const isNotificationDto = (value: unknown): value is NotificationView =>
+  isRecord(value) &&
+  typeof value.id === "string" &&
+  typeof value.userId === "string";
 
 const getNotificationKey = (event: NotificationEvent): string | undefined => {
   const data = event.data;
@@ -30,7 +33,9 @@ const getNotificationKey = (event: NotificationEvent): string | undefined => {
 
   if (isRecord(data) && typeof data.messageId === "string") {
     const mentionSuffix =
-      typeof data.mentionedUserId === "string" ? `:${data.mentionedUserId}` : "";
+      typeof data.mentionedUserId === "string"
+        ? `:${data.mentionedUserId}`
+        : "";
     return `${event.type}:${data.messageId}${mentionSuffix}`;
   }
 
@@ -55,8 +60,7 @@ const formatNotificationToast = (event: NotificationEvent) => {
       typeof data.serverName === "string" ? data.serverName : undefined;
     const channelId =
       typeof data.channelId === "string" ? data.channelId : undefined;
-    const content =
-      typeof data.content === "string" ? data.content : undefined;
+    const content = typeof data.content === "string" ? data.content : undefined;
 
     return {
       title: serverName ?? "New message",
@@ -101,12 +105,10 @@ const queryClient = new QueryClient({
 });
 const Providers = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const seenNotificationsRef = useRef<{ set: Set<string>; queue: string[] }>(
-    {
-      set: new Set(),
-      queue: [],
-    },
-  );
+  const seenNotificationsRef = useRef<{ set: Set<string>; queue: string[] }>({
+    set: new Set(),
+    queue: [],
+  });
 
   const rememberNotificationKey = (key: string) => {
     const { set, queue } = seenNotificationsRef.current;
@@ -123,35 +125,63 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     const subscription = notification$.subscribe((event) => {
-      if (event.type !== "message.create") return;
-
-      const key = getNotificationKey(event);
-      if (key && hasNotificationKey(key)) {
-        console.log('notification already displayed!')
+      if (event.type !== "message.create" && event.type !== "message.mention") {
         return;
       }
+
+      const key = getNotificationKey(event);
       if (key) {
+        if (hasNotificationKey(key)) {
+          console.debug("notification already displayed", key);
+          return;
+        }
         rememberNotificationKey(key);
       }
 
-      const { title, subtitle, body, serverId: payloadServerId, channelId: payloadChannelId } =
-        formatNotificationToast(event);
+      const {
+        title,
+        subtitle,
+        body,
+        serverId: payloadServerId,
+        channelId: payloadChannelId,
+      } = formatNotificationToast(event);
       toast(title, {
         description: [subtitle, body].filter(Boolean).join(" • ") || undefined,
         id: key,
-        action: payloadServerId && payloadChannelId
-          ? {
-              label: "View",
+        action:
+          payloadServerId && payloadChannelId
+            ? {
+                label: "View",
               onClick: () => {
-          },
-          }
-          : undefined,
-        onClick: () => {
-          if (payloadServerId && payloadChannelId) {
-            router.push(`/dashboard/server/${payloadServerId}/channel/${payloadChannelId}`);
-          }
-        },
+                if (payloadServerId && payloadChannelId) {
+                  router.push(
+                    `/dashboard/server/${payloadServerId}/channel/${payloadChannelId}`,
+                  );
+                }
+              },
+            }
+            : undefined,
       });
+      if (isNotificationDto(event.data)) {
+        queryClient.setQueryData(
+          queryKeys.notifications.unread,
+          (current?: NotificationView[]) => {
+            const existing = current ?? [];
+            const alreadyExists = existing.some(
+              (notification) => notification.id === event.data.id,
+            );
+            if (alreadyExists) {
+              return existing;
+            }
+            const next = [event.data, ...existing];
+            return next.slice(0, 50);
+          },
+        );
+      } else {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.notifications.unread,
+        });
+      }
     });
 
     startNotificationStream();
