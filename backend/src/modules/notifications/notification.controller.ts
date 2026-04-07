@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Sse, UseGuards, Logger } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Sse, UseGuards, Logger, NotFoundException } from '@nestjs/common';
 import { AuthGuard, Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { NotificationService } from './notification.service';
 import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
@@ -37,7 +37,25 @@ export class NotificationContoller {
   async listUnread(@Session() session: UserSession) {
     return this.notifications.listNotifications(session.user.id, {
       status: 'unread',
+      excludeActorId: session.user.id,
     });
+  }
+
+  @Patch(':notificationId/read')
+  @ApiOperation({ summary: 'Mark a notification as read' })
+  @ApiOkResponse({ type: NotificationViewDto })
+  async markRead(
+    @Param('notificationId') notificationId: string,
+    @Session() session: UserSession,
+  ) {
+    const updated = await this.notifications.markAsRead(
+      session.user.id,
+      notificationId,
+    );
+    if (!updated) {
+      throw new NotFoundException('Notification not found');
+    }
+    return updated;
   }
 
   @Sse('stream')
