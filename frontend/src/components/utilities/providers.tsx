@@ -12,6 +12,7 @@ import {
 import type { NotificationEvent } from "@/lib/notification-stream";
 import type { components } from "@/types/openapi";
 import { queryKeys } from "@/lib/query-keys";
+import { markNotificationRead } from "@/lib/notifications/actions";
 
 type NotificationView = components["schemas"]["NotificationViewDto"];
 
@@ -120,8 +121,32 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const hasNotificationKey = (key: string) =>
-    seenNotificationsRef.current.set.has(key);
+const hasNotificationKey = (key: string) =>
+  seenNotificationsRef.current.set.has(key);
+
+const removeNotificationFromCache = (notificationId: string) => {
+  queryClient.setQueryData(
+    queryKeys.notifications.unread,
+    (current?: NotificationView[]) =>
+      current?.filter((notification) => notification.id !== notificationId) ??
+      current,
+  );
+};
+
+const navigateToNotification = (
+  notification: NotificationView,
+  router: ReturnType<typeof useRouter>,
+) => {
+  if (notification.id) {
+    void markNotificationRead(notification.id);
+    removeNotificationFromCache(notification.id);
+  }
+  if (notification.serverId && notification.channelId) {
+    router.push(
+      `/dashboard/server/${notification.serverId}/channel/${notification.channelId}`,
+    );
+  }
+};
 
   useEffect(() => {
     const subscription = notification$.subscribe((event) => {
@@ -145,35 +170,41 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
         serverId: payloadServerId,
         channelId: payloadChannelId,
       } = formatNotificationToast(event);
+      const notificationDto = isNotificationDto(event.data)
+        ? event.data
+        : undefined;
       toast(title, {
         description: [subtitle, body].filter(Boolean).join(" • ") || undefined,
         id: key,
         action:
-          payloadServerId && payloadChannelId
+          notificationDto && payloadServerId && payloadChannelId
             ? {
                 label: "View",
-              onClick: () => {
-                if (payloadServerId && payloadChannelId) {
-                  router.push(
-                    `/dashboard/server/${payloadServerId}/channel/${payloadChannelId}`,
-                  );
-                }
-              },
-            }
+                onClick: () => {
+                  if (notificationDto) {
+                    navigateToNotification(notificationDto, router);
+                  }
+                },
+              }
             : undefined,
+        onClick: () => {
+          if (notificationDto) {
+            navigateToNotification(notificationDto, router);
+          }
+        },
       });
-      if (isNotificationDto(event.data)) {
+      if (notificationDto) {
         queryClient.setQueryData(
           queryKeys.notifications.unread,
           (current?: NotificationView[]) => {
             const existing = current ?? [];
             const alreadyExists = existing.some(
-              (notification) => notification.id === event.data.id,
+              (notification) => notification.id === notificationDto.id,
             );
             if (alreadyExists) {
               return existing;
             }
-            const next = [event.data, ...existing];
+            const next = [notificationDto, ...existing];
             return next.slice(0, 50);
           },
         );
