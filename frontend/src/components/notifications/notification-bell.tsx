@@ -1,7 +1,9 @@
 "use client";
 
 import { Bell, Loader2, RefreshCw } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,10 +14,14 @@ import {
 import { cn } from "@/lib/utils";
 import { useUnreadNotifications } from "@/hooks/notifications/useUnreadNotifications";
 import type { components } from "@/types/openapi";
+import { markNotificationRead } from "@/lib/notifications/actions";
+import { queryKeys } from "@/lib/query-keys";
 
 type NotificationView = components["schemas"]["NotificationViewDto"];
 
 export function NotificationBell() {
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const {
     data: notifications,
     isLoading,
@@ -24,6 +30,25 @@ export function NotificationBell() {
   } = useUnreadNotifications();
 
   const unreadCount = notifications?.length ?? 0;
+
+  const handleNotificationSelect = useCallback(
+    (notification: NotificationView) => {
+      if (notification.id) {
+        void markNotificationRead(notification.id);
+        queryClient.setQueryData(
+          queryKeys.notifications.unread,
+          (current?: NotificationView[]) =>
+            current?.filter((item) => item.id !== notification.id) ?? current,
+        );
+      }
+      if (notification.serverId && notification.channelId) {
+        router.push(
+          `/dashboard/server/${notification.serverId}/channel/${notification.channelId}`,
+        );
+      }
+    },
+    [queryClient, router],
+  );
 
   const content = useMemo(() => {
     if (isLoading) {
@@ -52,12 +77,16 @@ export function NotificationBell() {
       <div className="max-h-64 overflow-y-auto">
         <ul>
           {notifications.map((notification) => (
-            <NotificationItem key={notification.id} notification={notification} />
+            <NotificationItem
+              key={notification.id}
+              notification={notification}
+              onNavigate={() => handleNotificationSelect(notification)}
+            />
           ))}
         </ul>
       </div>
     );
-  }, [isLoading, notifications]);
+  }, [handleNotificationSelect, isLoading, notifications]);
 
   return (
     <Popover>
@@ -95,21 +124,31 @@ export function NotificationBell() {
 
 type NotificationItemProps = {
   notification: NotificationView;
+  onNavigate?: () => void;
 };
 
-function NotificationItem({ notification }: NotificationItemProps) {
+function NotificationItem({ notification, onNavigate }: NotificationItemProps) {
+  const isNavigable = Boolean(notification.serverId && notification.channelId);
+  const handleClick = () => {
+    if (isNavigable) {
+      onNavigate?.();
+    }
+  };
+
   return (
     <li
       className={cn(
         "border-b border-border/40 px-3 py-3 text-sm last:border-b-0",
+        isNavigable && "cursor-pointer hover:bg-muted/50",
       )}
+      onClick={handleClick}
     >
       <p className="font-semibold text-foreground">
         {notification.serverName ?? notification.title}
       </p>
       {notification.channelId ? (
         <p className="text-xs uppercase tracking-wide text-muted-foreground">
-          #{notification.title}
+          #{notification.channelId}
         </p>
       ) : null}
       {notification.body ? (
