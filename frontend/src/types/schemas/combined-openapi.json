@@ -554,6 +554,37 @@
         ]
       }
     },
+    "/notifications/{notificationId}/read": {
+      "patch": {
+        "operationId": "NotificationContoller_markRead",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationViewDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Mark a notification as read",
+        "tags": [
+          "NotificationContoller"
+        ]
+      }
+    },
     "/notifications/stream": {
       "get": {
         "operationId": "NotificationContoller_stream",
