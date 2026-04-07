@@ -33,7 +33,9 @@ type NotificationPayloadMap = {
   generic: NotificationViewDto;
 };
 
-export type NotificationStreamEvent<T extends NotificationEventType = NotificationEventType> = {
+export type NotificationStreamEvent<
+  T extends NotificationEventType = NotificationEventType,
+> = {
   event: T;
   data: NotificationPayloadMap[T];
 };
@@ -75,11 +77,19 @@ export class NotificationService {
 
   async listNotifications(
     userId: string,
-    options?: { status?: NotificationStatus; limit?: number },
+    options?: { status?: NotificationStatus; limit?: number; excludeActorId?: string },
   ): Promise<NotificationViewDto[]> {
-    const filter: FilterQuery<INotification> = { userId };
+    const filter: FilterQuery<INotification> = {
+      userId,
+    };
     if (options?.status) {
       filter.status = options.status;
+    }
+    if (options?.excludeActorId) {
+      filter.$or = [
+        { actorId: { $ne: options.excludeActorId } },
+        { actorId: { $exists: false } },
+      ];
     }
 
     const docs = await Notification.find(filter)
@@ -88,6 +98,26 @@ export class NotificationService {
       .lean<INotification[]>();
 
     return docs.map((doc) => this.toNotificationView(doc));
+  }
+
+  async markAsRead(userId: string, notificationId: string): Promise<NotificationViewDto | null> {
+    const notification = await Notification.findOneAndUpdate(
+      {
+        _id: notificationId,
+        userId,
+      },
+      {
+        status: 'read',
+        readAt: new Date(),
+      },
+      { new: true },
+    ).lean<INotification | null>();
+
+    if (!notification) {
+      return null;
+    }
+
+    return this.toNotificationView(notification);
   }
 
   emitMessageCreated(payload: MessageNotificationPayload) {
@@ -114,7 +144,8 @@ export class NotificationService {
       return;
     }
 
-    const eventName = (notification.type ?? 'generic') as NotificationStreamEvent['event'];
+    const eventName = (notification.type ??
+      'generic') as NotificationStreamEvent['event'];
     const event: NotificationStreamEvent = {
       event: eventName,
       data: notification,
