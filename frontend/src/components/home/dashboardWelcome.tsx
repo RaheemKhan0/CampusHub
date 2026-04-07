@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { UniversityModulesSection } from "./university-modules";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 export function DashboardWelcome() {
   return (
@@ -54,6 +55,7 @@ export function DashboardWelcome() {
                 Create a server
                 <UsersRound className="h-4 w-4" />
               </Button>
+              <NotificationBell />
             </div>
           </div>
         </div>

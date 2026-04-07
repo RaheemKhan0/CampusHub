@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { Observable } from 'rxjs';
 import { Subject } from 'rxjs';
-import type { NotificationType } from 'src/database/types';
+import type { FilterQuery } from 'mongoose';
+import type { NotificationStatus, NotificationType } from 'src/database/types';
 import {
   Notification,
   type INotification,
@@ -32,7 +33,9 @@ type NotificationPayloadMap = {
   generic: NotificationViewDto;
 };
 
-export type NotificationStreamEvent<T extends NotificationEventType = NotificationEventType> = {
+export type NotificationStreamEvent<
+  T extends NotificationEventType = NotificationEventType,
+> = {
   event: T;
   data: NotificationPayloadMap[T];
 };
@@ -44,6 +47,7 @@ export class NotificationService {
   private readonly emittedNotificationIds = new Set<string>();
   private readonly emittedNotificationQueue: string[] = [];
   private readonly maxTrackedNotifications = 500;
+  private readonly defaultListLimit = 50;
 
   get stream(): Observable<NotificationStreamEvent> {
     return this.stream$.asObservable();
@@ -71,6 +75,51 @@ export class NotificationService {
     return view;
   }
 
+  async listNotifications(
+    userId: string,
+    options?: { status?: NotificationStatus; limit?: number; excludeActorId?: string },
+  ): Promise<NotificationViewDto[]> {
+    const filter: FilterQuery<INotification> = {
+      userId,
+    };
+    if (options?.status) {
+      filter.status = options.status;
+    }
+    if (options?.excludeActorId) {
+      filter.$or = [
+        { actorId: { $ne: options.excludeActorId } },
+        { actorId: { $exists: false } },
+      ];
+    }
+
+    const docs = await Notification.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(options?.limit ?? this.defaultListLimit)
+      .lean<INotification[]>();
+
+    return docs.map((doc) => this.toNotificationView(doc));
+  }
+
+  async markAsRead(userId: string, notificationId: string): Promise<NotificationViewDto | null> {
+    const notification = await Notification.findOneAndUpdate(
+      {
+        _id: notificationId,
+        userId,
+      },
+      {
+        status: 'read',
+        readAt: new Date(),
+      },
+      { new: true },
+    ).lean<INotification | null>();
+
+    if (!notification) {
+      return null;
+    }
+
+    return this.toNotificationView(notification);
+  }
+
   emitMessageCreated(payload: MessageNotificationPayload) {
     const event: NotificationStreamEvent<'message.create'> = {
       event: 'message.create',
@@ -95,7 +144,8 @@ export class NotificationService {
       return;
     }
 
-    const eventName = (notification.type ?? 'generic') as NotificationStreamEvent['event'];
+    const eventName = (notification.type ??
+      'generic') as NotificationStreamEvent['event'];
     const event: NotificationStreamEvent = {
       event: eventName,
       data: notification,

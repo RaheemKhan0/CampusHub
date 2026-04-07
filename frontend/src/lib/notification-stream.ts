@@ -2,7 +2,7 @@ import { Subject } from "rxjs";
 
 import type { components } from "@/types/openapi";
 
-type NotificationViewDto = components["schemas"]["NotificationViewDto"];
+type NotificationView = components["schemas"]["NotificationViewDto"];
 
 export type MessageNotificationPayload = {
   messageId: string;
@@ -20,15 +20,15 @@ export type MentionNotificationPayload = MessageNotificationPayload & {
 export type NotificationEvent =
   | {
       type: "message.create";
-      data: MessageNotificationPayload | NotificationViewDto;
+      data: MessageNotificationPayload | NotificationView;
     }
   | {
       type: "message.mention";
-      data: MentionNotificationPayload | NotificationViewDto;
+      data: MentionNotificationPayload | NotificationView;
     }
-  | { type: "channel.invite"; data: NotificationViewDto }
-  | { type: "membership.status"; data: NotificationViewDto }
-  | { type: "generic"; data: NotificationViewDto };
+  | { type: "channel.invite"; data: NotificationView }
+  | { type: "membership.status"; data: NotificationView }
+  | { type: "generic"; data: NotificationView };
 
 const notificationSubject = new Subject<NotificationEvent>();
 
