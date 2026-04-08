@@ -5,7 +5,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { type FilterQuery } from 'mongoose';
+import { type FilterQuery, Types } from 'mongoose';
 import slugify from 'slugify';
 
 import { CreateServerDto } from './dto/create-server.dto';
@@ -43,7 +43,8 @@ export class ServerService {
         degreeId: dto.degreeId,
         degreeModuleId: dto.degreeModuleId,
       });
-      return this.toServerView(server);
+      const moduleYear = await this.getDegreeModuleYear(server.degreeModuleId);
+      return this.toServerView(server, { moduleYear });
     } catch (error: unknown) {
       if (
         typeof error === 'object' &&
@@ -88,7 +89,8 @@ export class ServerService {
     }).lean<IServer | null>();
 
     if (!server) throw new NotFoundException('Server not found');
-    return this.toServerView(server);
+    const moduleYear = await this.getDegreeModuleYear(server.degreeModuleId);
+    return this.toServerView(server, { moduleYear });
   }
 
   async findById(serverId: string, actorId: string): Promise<ServerViewDto> {
@@ -115,7 +117,8 @@ export class ServerService {
       throw new NotFoundException('Server not found');
     }
 
-    return this.toServerView(server);
+    const moduleYear = await this.getDegreeModuleYear(server.degreeModuleId);
+    return this.toServerView(server, { moduleYear });
   }
 
   async remove(serverId: string, actorId: string) {
@@ -134,7 +137,20 @@ export class ServerService {
     return { ok: true } as const;
   }
 
-  private toServerView(doc: IServer): ServerViewDto {
+  private async getDegreeModuleYear(
+    degreeModuleId?: Types.ObjectId | string,
+  ): Promise<number | undefined> {
+    if (!degreeModuleId) return undefined;
+    const module = await DegreeModule.findById(degreeModuleId)
+      .select('year')
+      .lean<{ year: number } | null>();
+    return module?.year;
+  }
+
+  private toServerView(
+    doc: IServer,
+    extras?: { moduleYear?: number },
+  ): ServerViewDto {
     const toIso = (value: Date | string | undefined): string =>
       new Date(value ?? Date.now()).toISOString();
 
@@ -154,6 +170,9 @@ export class ServerService {
     }
     if (doc.icon) {
       view.icon = doc.icon;
+    }
+    if (extras?.moduleYear !== undefined) {
+      view.moduleYear = extras.moduleYear;
     }
 
     return view;
@@ -240,7 +259,13 @@ export class ServerService {
         ServerModel.countDocuments(countFilter).exec(),
       ]);
 
-      const items = docs.map((item) => this.toServerView(item));
+      const moduleYearMap = await this.buildModuleYearMap(docs);
+      const items = docs.map((item) =>
+        this.toServerView(item, {
+          moduleYear:
+            moduleYearMap.get(String(item.degreeModuleId)) ?? undefined,
+        }),
+      );
       return {
         items,
         total,
@@ -254,10 +279,34 @@ export class ServerService {
       ServerModel.countDocuments(countFilter),
     ]);
 
-    const items = docs.map((item) => this.toServerView(item));
+    const moduleYearMap = await this.buildModuleYearMap(docs);
+    const items = docs.map((item) =>
+      this.toServerView(item, {
+        moduleYear:
+          moduleYearMap.get(String(item.degreeModuleId)) ?? undefined,
+      }),
+    );
     return {
       items,
       total,
     };
+  }
+
+  private async buildModuleYearMap(
+    servers: IServer[],
+  ): Promise<Map<string, number>> {
+    const ids = servers
+      .map((server) => server.degreeModuleId)
+      .filter(Boolean)
+      .map((id) => new Types.ObjectId(id));
+    if (!ids.length) return new Map();
+    const modules = await DegreeModule.find({ _id: { $in: ids } })
+      .select('_id year')
+      .lean<{ _id: Types.ObjectId; year: number }[]>();
+    const map = new Map<string, number>();
+    modules.forEach((mod) => {
+      map.set(String(mod._id), mod.year);
+    });
+    return map;
   }
 }
