@@ -11,8 +11,14 @@ type ListFilters = Omit<ServerListQuery, "page">;
 type InfiniteServerData = InfiniteData<ServerListResponse, number>;
 
 type QueryKey = ReturnType<typeof qk.serversInfinite>;
+type UseInfiniteServersOptions = {
+  enabled?: boolean;
+};
 
-export const useInfiniteServers = (params?: ListFilters) =>
+export const useInfiniteServers = (
+  params?: ListFilters,
+  options?: UseInfiniteServersOptions,
+) =>
   useInfiniteQuery<
     ServerListResponse,
     Error,
@@ -36,4 +42,5 @@ export const useInfiniteServers = (params?: ListFilters) =>
       const totalFetched = lastPage.page * lastPage.pageSize;
       return totalFetched < lastPage.total ? lastPage.page + 1 : undefined;
     },
+    enabled: options?.enabled ?? true,
   });

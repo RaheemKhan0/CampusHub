@@ -3484,6 +3484,8 @@ export interface components {
             slug: string;
             degreeId: string;
             degreeModuleId: string;
+            /** @description Academic year of the degree module (1-based) */
+            moduleYear?: number;
             /** @description BetterAuth user id when the server has an owner */
             ownerId?: string;
             icon?: string;
