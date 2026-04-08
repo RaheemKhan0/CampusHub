@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, FolderOpenDot, Users } from "lucide-react";
+import { Bell, BookOpen, HelpCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,38 +20,38 @@ export function ServerWelcome({
   actionLabel = "Browse channels",
 }: ServerWelcomeProps) {
   return (
-    <div className="flex h-full flex-col items-center justify-center gap-12 px-6 py-12 text-center">
+    <div className="flex h-full flex-col items-center justify-center gap-10 px-6 py-12 text-center">
       <header className="space-y-3">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-          <Compass className="h-8 w-8" />
+        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl border border-border/60 bg-primary/10 text-primary">
+          <BookOpen className="h-8 w-8" />
         </div>
-        <h1 className="text-2xl font-semibold text-foreground">
+        <h1 className="text-2xl font-bold text-foreground">
           Welcome to {serverName}
         </h1>
-        <p className="mx-auto max-w-xl text-sm text-muted-foreground">
+        <p className="mx-auto max-w-md text-sm leading-relaxed text-muted-foreground">
           {description ??
-            `Pick a channel to dive into updates, resources, and conversations happening in ${serverName}.`}
+            `You're in ${serverName}. Pick a channel from the sidebar to start reading, sharing resources, or asking questions with your cohort.`}
         </p>
       </header>
 
       <Card className="w-full max-w-2xl border-border/60 bg-background/80 shadow-sm">
-        <CardContent className="grid gap-6 px-8 py-10 md:grid-cols-3">
+        <CardContent className="grid gap-6 px-8 py-8 md:grid-cols-3">
           <Blurb
-            icon={FolderOpenDot}
-            title="Organized spaces"
-            description="Each channel keeps discussions focused on a topic or module."
+            icon={BookOpen}
+            title="Share resources"
+            description="Drop lecture notes, past papers, and useful links in resource channels so your whole cohort benefits."
           />
           <Separator className="hidden md:block" orientation="vertical" />
           <Blurb
-            icon={Users}
-            title="Collaborate quickly"
-            description="Meet classmates, teachers, or teammates where they’re already talking."
+            icon={HelpCircle}
+            title="Ask & answer"
+            description="Post questions in the Q&A channel and get help from classmates and teaching staff directly."
           />
           <Separator className="hidden md:block" orientation="vertical" />
           <Blurb
-            icon={Compass}
-            title="Find your flow"
-            description="Hop between channels to keep up with everything happening in this server."
+            icon={Bell}
+            title="Stay in the loop"
+            description="Keep an eye on the announcements channel for deadline reminders, updates, and important notices."
           />
         </CardContent>
       </Card>
@@ -74,12 +74,14 @@ type BlurbProps = {
 function Blurb({ icon: Icon, title, description }: BlurbProps) {
   return (
     <div className="flex flex-col items-center gap-3 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-muted text-primary">
-        <Icon className="h-6 w-6" />
+      <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <Icon className="h-5 w-5" />
       </div>
       <div className="space-y-1">
         <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          {description}
+        </p>
       </div>
     </div>
   );
