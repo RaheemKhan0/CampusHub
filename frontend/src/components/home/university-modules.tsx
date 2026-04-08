@@ -467,14 +467,6 @@ export function UniversityModulesSection() {
             announcements, assignments, and collaborative channels.
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => refetch()}
-          className="gap-2 self-start sm:self-auto"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
       </div>
       {renderContent()}
     </section>
