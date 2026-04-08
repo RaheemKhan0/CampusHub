@@ -121,32 +121,29 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-const hasNotificationKey = (key: string) =>
-  seenNotificationsRef.current.set.has(key);
+  const hasNotificationKey = (key: string) =>
+    seenNotificationsRef.current.set.has(key);
 
-const removeNotificationFromCache = (notificationId: string) => {
-  queryClient.setQueryData(
-    queryKeys.notifications.unread,
-    (current?: NotificationView[]) =>
-      current?.filter((notification) => notification.id !== notificationId) ??
-      current,
-  );
-};
-
-const navigateToNotification = (
-  notification: NotificationView,
-  router: ReturnType<typeof useRouter>,
-) => {
-  if (notification.id) {
-    void markNotificationRead(notification.id);
-    removeNotificationFromCache(notification.id);
-  }
-  if (notification.serverId && notification.channelId) {
-    router.push(
-      `/dashboard/server/${notification.serverId}/channel/${notification.channelId}`,
+  const removeNotificationFromCache = (notificationId: string) => {
+    queryClient.setQueryData(
+      queryKeys.notifications.unread,
+      (current?: NotificationView[]) =>
+        current?.filter((notification) => notification.id !== notificationId) ??
+        current,
     );
-  }
-};
+  };
+
+  const navigateToNotification = (notification: NotificationView) => {
+    if (notification.id) {
+      void markNotificationRead(notification.id);
+      removeNotificationFromCache(notification.id);
+    }
+    if (notification.serverId && notification.channelId) {
+      router.push(
+        `/dashboard/server/${notification.serverId}/channel/${notification.channelId}`,
+      );
+    }
+  };
 
   useEffect(() => {
     const subscription = notification$.subscribe((event) => {
