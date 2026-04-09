@@ -1,0 +1,396 @@
+{
+  "degrees": [
+    {
+      "degree_title": "BSc (Hons) Computer Science",
+      "level": "Undergraduate",
+      "school": "School of Science & Technology",
+      "durationYears": 3,
+      "modules": [
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Introduction to Algorithms",
+          "moduleKind": "core",
+          "term": "firstterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Mathematics for Computing",
+          "moduleKind": "core",
+          "term": "firstterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Systems Architecture",
+          "moduleKind": "core",
+          "term": "firstterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Programming in Java",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Operating Systems",
+          "moduleKind": "core",
+          "term": "secondterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Computer Science, Ethics & Society",
+          "moduleKind": "core",
+          "term": "secondterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Databases",
+          "moduleKind": "core",
+          "term": "secondterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Data Structures and Algorithms",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Language Processors",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Computer Networks",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Object-Oriented Analysis and Design",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Professional Development in IT",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Team Project",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Programming in C++",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Work Based Project",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Continuing Professional Development in IT",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Cloud Technology for Business Transformation",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Individual Project",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Theory of Computation",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Functional Programming",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Games Technology",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Advanced Databases",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Computer Graphics",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Advanced Games Technology",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Professional Experience (Placement) Placement Reports",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Data Visualization",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Digital Signal Processing and Audio Programming",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Project Management",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Advanced Programming – Concurrency",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Natural Language Processing",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Cloud Computing",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Information Security Fundamentals",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Computer Vision",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Introduction to Artificial Intelligence",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Programming and Mathematics for AI",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Agents and Multi Agents Systems",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "User Centred Systems Design",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Semantic Web Technologies and Knowledge Graphs",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-hons-computer-science"
+        }
+      ]
+    },
+    {
+      "degree_title": "BSc (Hons) Mathematics",
+      "level": "Undergraduate",
+      "school": "School of Science & Technology",
+      "durationYears": 3,
+      "modules": [
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Functions, Vectors and Calculus 1",
+          "moduleKind": "core",
+          "term": "firstterm",
+          "degree_name": "bsc-maths"
+        },
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Linear Algebra",
+          "moduleKind": "core",
+          "term": "secondterm",
+          "degree_name": "bsc-maths"
+        },
+        {
+          "year": "Year 1",
+          "code": null,
+          "name": "Introduction to Probability and Statistics",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-maths"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Real Analysis",
+          "moduleKind": "core",
+          "term": "firstterm",
+          "degree_name": "bsc-maths"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Vector Calculus",
+          "moduleKind": "core",
+          "term": "secondterm",
+          "degree_name": "bsc-maths"
+        },
+        {
+          "year": "Year 2",
+          "code": null,
+          "name": "Programming and Data Science for the Professions",
+          "moduleKind": "elective",
+          "term": "fullterm",
+          "degree_name": "bsc-maths"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Complex Analysis",
+          "moduleKind": "elective",
+          "term": "firstterm",
+          "degree_name": "bsc-maths"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Graph Theory",
+          "moduleKind": "elective",
+          "term": "secondterm",
+          "degree_name": "bsc-maths"
+        },
+        {
+          "year": "Year 3",
+          "code": null,
+          "name": "Group Project",
+          "moduleKind": "core",
+          "term": "fullterm",
+          "degree_name": "bsc-maths"
+        }
+      ]
+    }
+  ]
+}
