@@ -1,10 +1,14 @@
+"use client";
+
 import React from "react";
 import { Button } from "../ui/button";
 import Link from "next/link";
-import { LogIn } from "lucide-react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, LayoutDashboard, LogIn } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 const Navbar = () => {
+  const { data: session, isPending } = authClient.useSession();
+
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
@@ -32,18 +36,31 @@ const Navbar = () => {
           </Link>
         </nav>
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm" className="gap-1">
-            <Link href="/login">
-              <LogIn className="size-4" />
-              Sign in
-            </Link>
-          </Button>
-          <Button asChild size="sm" className="gap-1">
-            <Link href="/signup">
-              Get started
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
+          {!isPending && (
+            session ? (
+              <Button asChild size="sm" className="gap-1">
+                <Link href="/dashboard">
+                  <LayoutDashboard className="size-4" />
+                  Dashboard
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button asChild variant="ghost" size="sm" className="gap-1">
+                  <Link href="/login">
+                    <LogIn className="size-4" />
+                    Sign in
+                  </Link>
+                </Button>
+                <Button asChild size="sm" className="gap-1">
+                  <Link href="/signup">
+                    Get started
+                    <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+              </>
+            )
+          )}
         </div>
       </div>
     </header>
