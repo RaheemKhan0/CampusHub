@@ -7,6 +7,7 @@ export interface IDegreeModule extends Document {
   moduleId: Types.ObjectId;
   year: number; // 1, 2, 3 (for UG)
   kind: ModuleKind; // 'core' | 'elective'
+  degree: string;
   term?: Term;
   createdAt: Date;
   updatedAt: Date;
@@ -27,6 +28,7 @@ const DegreeModuleSchema = new Schema<IDegreeModule>(
       index: true,
     },
     year: { type: Number, required: true, min: 1, max: 6 },
+    degree: { type: String, required: true },
     kind: {
       type: String,
       enum: ModuleKinds as unknown as string[],
