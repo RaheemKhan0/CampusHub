@@ -6124,6 +6124,9 @@
           },
           "startYear": {
             "type": "number"
+          },
+          "degree": {
+            "type": "string"
           }
         },
         "required": [
@@ -6133,7 +6136,8 @@
           "createdAt",
           "updatedAt",
           "degreeSlug",
-          "startYear"
+          "startYear",
+          "degree"
         ]
       },
       "Session": {

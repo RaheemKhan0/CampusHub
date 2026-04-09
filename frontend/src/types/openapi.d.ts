@@ -3889,6 +3889,7 @@ export interface components {
             isSuper: boolean;
             degreeSlug: string;
             startYear: number;
+            degree: string;
         };
         Session: {
             id?: string;
