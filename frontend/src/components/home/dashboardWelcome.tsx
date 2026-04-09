@@ -3,6 +3,7 @@
 import {
   ArrowRight,
   BookOpen,
+  LogOut,
   MessageSquareText,
   UniversityIcon,
   Users,
@@ -18,8 +19,17 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { UniversityModulesSection } from "./university-modules";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export function DashboardWelcome() {
+  const router = useRouter();
+
+  async function handleLogout() {
+    await authClient.signOut();
+    router.push("/login");
+  }
+
   return (
     <div className="mx-auto flex h-full w-full max-w-5xl flex-col gap-8 px-6 py-10">
 
@@ -54,6 +64,15 @@ export function DashboardWelcome() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <NotificationBell />
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
             </div>
           </div>
         </div>
