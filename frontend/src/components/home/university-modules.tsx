@@ -108,6 +108,24 @@ export function UniversityModulesSection() {
     };
   }, [session?.user?.degreeSlug, session?.user?.startYear]);
 
+  // Compute which academic year the student is currently in (e.g. 2022 start → Year 3 in 2024)
+  const studentCurrentYear = useMemo(() => {
+    const startYear = session?.user?.startYear;
+    if (typeof startYear !== "number") return undefined;
+    const year = new Date().getFullYear() - startYear + 1;
+    return year >= 1 ? year : undefined;
+  }, [session?.user?.startYear]);
+
+  // Human-readable degree label derived from the slug (e.g. "bsc-cs" → "Bsc Cs")
+  const degreeLabel = useMemo(() => {
+    const slug = session?.user?.degreeSlug;
+    if (!slug) return null;
+    return slug
+      .split("-")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+  }, [session?.user?.degreeSlug]);
+
   const {
     data,
     isLoading,
@@ -154,14 +172,22 @@ export function UniversityModulesSection() {
         return prev;
       }
       if (yearOptions.length > 0) {
-        return String(yearOptions[0]);
+        // Default to the student's current academic year, or the closest year <= it
+        if (studentCurrentYear !== undefined) {
+          const best =
+            yearOptions.filter((y) => y <= studentCurrentYear).at(-1) ??
+            yearOptions[yearOptions.length - 1];
+          return String(best);
+        }
+        // Fallback: highest available year
+        return String(yearOptions[yearOptions.length - 1]);
       }
       if (hasOtherGroups) {
         return "other";
       }
       return null;
     });
-  }, [yearOptions, hasOtherGroups]);
+  }, [yearOptions, hasOtherGroups, studentCurrentYear]);
 
   const filteredModules = useMemo(() => {
     if (!selectedYear) return modules;
@@ -304,6 +330,9 @@ export function UniversityModulesSection() {
                   )}
                 >
                   Year {year}
+                  {year === studentCurrentYear && (
+                    <span className="ml-1.5 text-[0.6rem] opacity-70">· current</span>
+                  )}
                 </button>
               );
             })}
@@ -460,13 +489,34 @@ export function UniversityModulesSection() {
             University modules
           </p>
           <h2 className="text-2xl font-bold text-foreground">
-            Jump back into your modules
+            {degreeLabel
+              ? `Your ${degreeLabel} modules`
+              : "Jump back into your modules"}
           </h2>
           <p className="text-sm text-muted-foreground">
-            All of your module servers are listed here. Pick one to catch up on
-            announcements, assignments, and collaborative channels.
+            {studentCurrentYear
+              ? `Showing modules up to Year ${studentCurrentYear} of your degree. Pick one to catch up on announcements, assignments, and collaborative channels.`
+              : "All of your module servers are listed here. Pick one to catch up on announcements, assignments, and collaborative channels."}
           </p>
+          {degreeLabel && studentCurrentYear && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs text-muted-foreground">
+                {degreeLabel}
+              </span>
+              <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs text-muted-foreground">
+                Year {studentCurrentYear}
+              </span>
+            </div>
+          )}
         </div>
+        <Button
+          variant="outline"
+          onClick={() => refetch()}
+          className="gap-2 self-start sm:self-auto"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
       </div>
       {renderContent()}
     </section>
