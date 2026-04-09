@@ -14,8 +14,6 @@ import {
   Lock,
   User,
   CheckCircle2,
-  Github,
-  Chrome,
   ShieldCheck,
   ChevronsUpDown,
   Check,
@@ -31,7 +29,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
   Form,
   FormControl,
@@ -169,14 +166,6 @@ export default function SignupPage() {
       setSubmitting(false);
     }
   }
-  // OAuth handlers (wire to your auth provider)
-  const onGoogle = async () => {
-    window.location.href = "/api/auth/oauth/google"; // adjust for your setup
-  };
-  const onGithub = async () => {
-    window.location.href = "/api/auth/oauth/github"; // adjust for your setup
-  };
-
   return (
     <div className="min-h-dvh grid place-items-center bg-gradient-to-b from-background to-muted px-4 py-10">
       <Card className="w-full max-w-[480px] shadow-lg border-border/60">
@@ -186,34 +175,6 @@ export default function SignupPage() {
         </CardHeader>
 
         <CardContent>
-          <div className="grid gap-3">
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                onClick={onGoogle}
-                disabled={submitting}
-                className="gap-2"
-              >
-                <Chrome className="size-4" /> Continue with Google
-              </Button>
-              <Button
-                variant="outline"
-                onClick={onGithub}
-                disabled={submitting}
-                className="gap-2"
-              >
-                <Github className="size-4" /> Continue with GitHub
-              </Button>
-            </div>
-
-            <div className="relative py-2">
-              <Separator />
-              <span className="absolute inset-0 -top-2 mx-auto w-fit bg-card px-2 text-xs text-muted-foreground">
-                or
-              </span>
-            </div>
-          </div>
-
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
               <FormField
