@@ -6,7 +6,7 @@ export const authClient = createAuthClient({
   plugins: [
     inferAdditionalFields({
       user: {
-        degreeSlug: {
+        degree: {
           type: "string",
         },
         startYear : {
