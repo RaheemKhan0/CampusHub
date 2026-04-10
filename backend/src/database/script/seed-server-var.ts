@@ -38,8 +38,8 @@ export const seedServers: SeedServer[] = [
     type: 'unimodules',
   },
   {
-    name: 'Cloud and Consultancy',
-    slug: 'cloud-and-consultancy',
+    name: 'Cloud Technology for Business Transformation',
+    slug: 'cloud-technology-for-business-transformation',
     type: 'unimodules',
   },
   {
@@ -221,5 +221,67 @@ export const seedServers: SeedServer[] = [
     name: 'Work Based Project',
     slug: 'work-based-project',
     type: 'unimodules',
+  },
+
+  // ── BSc (Hons) Mathematics ───────────────────────────────────────────────────
+
+  // Year 1
+  {
+    name: 'Functions, Vectors and Calculus 1',
+    slug: 'functions-vectors-and-calculus-1',
+    type: 'unimodules',
+    degreeSlug: 'bsc-hons-mathematics',
+  },
+  {
+    name: 'Linear Algebra',
+    slug: 'linear-algebra',
+    type: 'unimodules',
+    degreeSlug: 'bsc-hons-mathematics',
+  },
+  {
+    name: 'Introduction to Probability and Statistics',
+    slug: 'introduction-to-probability-and-statistics',
+    type: 'unimodules',
+    degreeSlug: 'bsc-hons-mathematics',
+  },
+
+  // Year 2
+  {
+    name: 'Real Analysis',
+    slug: 'real-analysis',
+    type: 'unimodules',
+    degreeSlug: 'bsc-hons-mathematics',
+  },
+  {
+    name: 'Vector Calculus',
+    slug: 'vector-calculus',
+    type: 'unimodules',
+    degreeSlug: 'bsc-hons-mathematics',
+  },
+  {
+    name: 'Programming and Data Science for the Professions',
+    slug: 'programming-and-data-science-for-the-professions',
+    type: 'unimodules',
+    degreeSlug: 'bsc-hons-mathematics',
+  },
+
+  // Year 3
+  {
+    name: 'Complex Analysis',
+    slug: 'complex-analysis',
+    type: 'unimodules',
+    degreeSlug: 'bsc-hons-mathematics',
+  },
+  {
+    name: 'Graph Theory',
+    slug: 'graph-theory',
+    type: 'unimodules',
+    degreeSlug: 'bsc-hons-mathematics',
+  },
+  {
+    name: 'Group Project',
+    slug: 'group-project',
+    type: 'unimodules',
+    degreeSlug: 'bsc-hons-mathematics',
   },
 ];

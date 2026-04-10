@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { type ServerType, ServerTypes } from 'src/database/types';
+import { type ServerType, ServerTypes, type SocietyCategory, SocietyCategoryTypes } from 'src/database/types';
 
 export class ServerViewDto {
   @ApiProperty()
@@ -32,6 +32,13 @@ export class ServerViewDto {
 
   @ApiPropertyOptional()
   icon?: string;
+
+  @ApiPropertyOptional({
+    enum: SocietyCategoryTypes,
+    enumName: 'SocietyCategory',
+    description: 'Category label — used to group citysocieties servers',
+  })
+  category?: SocietyCategory;
 
   @ApiProperty()
   createdAt!: string;

@@ -13,8 +13,6 @@ import {
   Loader2,
   Mail,
   Lock,
-  Github,
-  Chrome,
   CheckCircle2,
 } from "lucide-react";
 
@@ -28,7 +26,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Form,
@@ -87,10 +84,6 @@ export default function LoginPage() {
     toast.error(first?.message ?? "Please fix the errors");
   };
 
-  // OAuth handlers — adjust to your routes/providers
-  const onGoogle = () => (window.location.href = "/api/auth/oauth/google");
-  const onGithub = () => (window.location.href = "/api/auth/oauth/github");
-
   return (
     <div className="min-h-dvh grid place-items-center bg-gradient-to-b from-background to-muted px-4 py-10">
       <Card className="w-full max-w-[480px] shadow-lg border-border/60">
@@ -100,34 +93,6 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent>
-          <div className="grid gap-3">
-            <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                onClick={onGoogle}
-                disabled={submitting}
-                className="gap-2"
-              >
-                <Chrome className="size-4" /> Continue with Google
-              </Button>
-              <Button
-                variant="outline"
-                onClick={onGithub}
-                disabled={submitting}
-                className="gap-2"
-              >
-                <Github className="size-4" /> Continue with GitHub
-              </Button>
-            </div>
-
-            <div className="relative py-2">
-              <Separator />
-              <span className="absolute inset-0 -top-2 mx-auto w-fit bg-card px-2 text-xs text-muted-foreground">
-                or
-              </span>
-            </div>
-          </div>
-
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit, onInvalid)}

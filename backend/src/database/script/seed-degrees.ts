@@ -99,6 +99,7 @@ async function main() {
             year,
             kind: moduleSeed.moduleKind,
             term: moduleSeed.term,
+            degree: degree.name,
             updatedAt: new Date(),
           },
         },

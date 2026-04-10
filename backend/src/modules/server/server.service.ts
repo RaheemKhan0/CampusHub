@@ -171,6 +171,9 @@ export class ServerService {
     if (doc.icon) {
       view.icon = doc.icon;
     }
+    if (doc.category) {
+      view.category = doc.category;
+    }
     if (extras?.moduleYear !== undefined) {
       view.moduleYear = extras.moduleYear;
     }

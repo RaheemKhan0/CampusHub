@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useInfiniteServers } from "@/hooks/servers/useInfiniteServers";
+import { authClient } from "@/lib/auth-client";
 import type { components } from "@/types/openapi";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,6 +42,8 @@ export function ServerAccordion({
 
   const activeServerId = controlledActiveId ?? internalActiveId;
 
+  const { data: session, isPending: sessionPending } = authClient.useSession();
+
   const {
     data,
     isLoading,
@@ -49,7 +52,14 @@ export function ServerAccordion({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteServers();
+  } = useInfiniteServers(
+    {
+      degreeSlug: session?.user?.degreeSlug ?? undefined,
+      startYear: session?.user?.startYear ?? undefined,
+      type: "unimodules",
+    },
+    { enabled: !sessionPending && !!session },
+  );
 
   const servers = useMemo<ServerView[]>(() => {
     if (!data) return [];
@@ -83,7 +93,7 @@ export function ServerAccordion({
     [onServerSelect],
   );
 
-  if (isLoading) {
+  if (sessionPending || isLoading) {
     return (
       <div
         className={cn(

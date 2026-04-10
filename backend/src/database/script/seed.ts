@@ -65,6 +65,9 @@ async function resolveDegreeContext(seed: SeedServer): Promise<{
 async function seedServerCollection() {
   await connectDB();
 
+  const deleted = await ServerModel.deleteMany({});
+  console.log(`Cleared ${deleted.deletedCount} existing server records.`);
+
   const serverSet = new Set();
 
   const upserts = 0;
