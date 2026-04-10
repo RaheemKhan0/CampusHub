@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { UniversityModulesSection } from "./university-modules";
+import { SocietyServersSection } from "./society-servers";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
@@ -81,6 +82,9 @@ export function DashboardWelcome() {
 
       {/* ── University modules ───────────────────────────────────────── */}
       <UniversityModulesSection />
+
+      {/* ── Society servers ──────────────────────────────────────────── */}
+      <SocietyServersSection />
 
       {/* ── Snapshot cards ──────────────────────────────────────────── */}
       <section className="grid gap-4 md:grid-cols-3">
