@@ -63,6 +63,13 @@ export class ChannelsService {
     return { ok: true } as const;
   }
 
+  async deleteChannel(channelId: string): Promise<{ ok: true }> {
+    const channel = await Channel.findByIdAndDelete(channelId).lean<IChannel | null>();
+    if (!channel) throw new NotFoundException('Channel not found');
+    await ChannelAccess.deleteMany({ channelId });
+    return { ok: true };
+  }
+
   private toChannelView(doc: IChannel): ChannelViewDto {
     const toIso = (value: Date | string | undefined): string =>
       new Date(value ?? Date.now()).toISOString();

@@ -61,6 +61,13 @@ export class ChannelsController {
     return this.channels.addMember(channelId, ids);
   }
 
+  @Delete(':channelId')
+  @UseGuards(ChannelManageGuard)
+  @ApiOkResponse({ description: 'Deletes a channel and all its access records' })
+  deleteChannel(@Param('channelId') channelId: string) {
+    return this.channels.deleteChannel(channelId);
+  }
+
   @Delete(':channelId/members/:userId')
   @UseGuards(ChannelManageGuard)
   @ApiOkResponse({
