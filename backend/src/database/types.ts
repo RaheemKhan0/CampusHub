@@ -12,6 +12,14 @@ export type Role = (typeof RoleTypes)[number];
 export const ServerTypes = ['unimodules', 'citysocieties', 'personal'] as const;
 export type ServerType = (typeof ServerTypes)[number];
 
+export const SocietyCategoryTypes = [
+  'Sports & Fitness',
+  'Academic & Professional',
+  'Arts & Culture',
+  'Community & Lifestyle',
+] as const;
+export type SocietyCategory = (typeof SocietyCategoryTypes)[number];
+
 export const NotificationTypes = [
   'message.create',
   'message.mention',
