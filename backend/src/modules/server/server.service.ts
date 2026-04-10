@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { type FilterQuery, Types } from 'mongoose';
 import slugify from 'slugify';
@@ -122,16 +123,21 @@ export class ServerService {
   }
 
   async remove(serverId: string, actorId: string) {
-    const isSuper = true;
+    const user = await AppUser.findOne({ userId: actorId })
+      .select('isSuper')
+      .lean<UserSuperFlag | null>();
+    const isSuper = user?.isSuper ?? false;
+
     if (!isSuper) {
       const membership = await Membership.findOne({ serverId, userId: actorId })
         .select('roles')
         .lean<MembershipRoles | null>();
       const roles = membership?.roles ?? [];
-      if (!roles.some((role) => role === 'owner' || role === 'admin')) {
-        throw new ForbiddenException('Not allowed to delete this server');
+      if (!roles.some((role) => role === 'owner')) {
+        throw new ForbiddenException('Only owners can delete a server');
       }
     }
+
     await ServerModel.findByIdAndDelete(serverId).exec();
     await Membership.deleteMany({ serverId }).exec();
     return { ok: true } as const;
@@ -311,5 +317,67 @@ export class ServerService {
       map.set(String(mod._id), mod.year);
     });
     return map;
+  }
+
+  async addOwner(serverId: string, email: string): Promise<{ ok: true }> {
+    const server = await ServerModel.findById(serverId).lean<IServer | null>();
+    if (!server) throw new NotFoundException('Server not found');
+
+    const user = await AppUser.findOne({ email: email.toLowerCase() })
+      .select('userId')
+      .lean<Pick<IUser, 'userId'> | null>();
+    if (!user) throw new NotFoundException(`No user found with email ${email}`);
+
+    const existing = await Membership.findOne({
+      serverId,
+      userId: user.userId,
+    }).lean<Pick<IMembership, 'roles'> | null>();
+
+    if (existing) {
+      if (existing.roles.includes('owner')) {
+        throw new UnprocessableEntityException('User is already an owner of this server');
+      }
+      await Membership.updateOne(
+        { serverId, userId: user.userId },
+        { $addToSet: { roles: 'owner' } },
+      );
+    } else {
+      await Membership.create({
+        serverId,
+        userId: user.userId,
+        roles: ['owner'],
+        status: 'active',
+        joinedAt: new Date(),
+      });
+    }
+
+    return { ok: true };
+  }
+
+  async removeOwner(serverId: string, targetUserId: string, actorId: string): Promise<{ ok: true }> {
+    const server = await ServerModel.findById(serverId).lean<IServer | null>();
+    if (!server) throw new NotFoundException('Server not found');
+
+    // Prevent removing the last owner
+    const ownerCount = await Membership.countDocuments({
+      serverId,
+      roles: 'owner',
+      status: 'active',
+    });
+    if (ownerCount <= 1) {
+      throw new UnprocessableEntityException('Cannot remove the last owner of a server');
+    }
+
+    const membership = await Membership.findOne({ serverId, userId: targetUserId }).lean<Pick<IMembership, 'roles'> | null>();
+    if (!membership || !membership.roles.includes('owner')) {
+      throw new NotFoundException('User is not an owner of this server');
+    }
+
+    await Membership.updateOne(
+      { serverId, userId: targetUserId },
+      { $pull: { roles: 'owner' } },
+    );
+
+    return { ok: true };
   }
 }
