@@ -4194,7 +4194,11 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": {
+                        roles: string[];
+                    };
+                };
             };
         };
     };
@@ -4273,6 +4277,7 @@ export interface operations {
             header?: never;
             path: {
                 channelId: string;
+                serverId: string;
             };
             cookie?: never;
         };

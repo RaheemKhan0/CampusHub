@@ -327,7 +327,25 @@
         ],
         "responses": {
           "200": {
-            "description": "Returns the roles array for the current user in this server"
+            "description": "Returns the roles array for the current user in this server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roles": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "roles"
+                  ]
+                }
+              }
+            }
           }
         },
         "summary": "Get the current user membership roles for a server",
@@ -438,6 +456,14 @@
         "parameters": [
           {
             "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serverId",
             "required": true,
             "in": "path",
             "schema": {
