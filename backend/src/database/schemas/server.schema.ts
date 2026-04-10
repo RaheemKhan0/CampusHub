@@ -1,5 +1,5 @@
 import mongoose, { type Model, Schema, Document, Types } from 'mongoose';
-import { ServerType, ServerTypes } from '../types';
+import { ServerType, ServerTypes, SocietyCategory, SocietyCategoryTypes } from '../types';
 
 export interface IServer extends Document {
   name: string;
@@ -8,6 +8,7 @@ export interface IServer extends Document {
   slug: string; // globally unique (single-tenant)
   ownerId?: string; // BetterAuth user id, optional for system-owned servers
   icon?: string;
+  category?: SocietyCategory; // used by citysocieties to group servers
   createdAt: Date;
   type: ServerType;
   updatedAt: Date;
@@ -31,6 +32,7 @@ const ServerSchema = new Schema<IServer>(
     },
     ownerId: { type: String, required: false, index: true },
     icon: { type: String },
+    category: { type: String, enum: SocietyCategoryTypes as unknown as string[], required: false, index: true },
     type: {
       type: String,
       enum: ServerTypes as unknown as string[],
