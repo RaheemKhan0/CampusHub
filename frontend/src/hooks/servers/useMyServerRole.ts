@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/client";
 import { qk } from "@/lib/tanstack/queryKeys";
 
 export const useMyServerRole = (serverId?: string) => {
@@ -6,13 +7,11 @@ export const useMyServerRole = (serverId?: string) => {
     queryKey: qk.serverRoles(serverId ?? ""),
     enabled: Boolean(serverId),
     queryFn: async () => {
-      const base = process.env.NEXT_PUBLIC_API_URL ?? "";
-      const res = await fetch(`${base}/servers/${serverId}/me`, {
-        credentials: "include",
+      const { data, error } = await api.GET("/servers/{serverId}/me", {
+        params: { path: { serverId: serverId! } },
       });
-      if (!res.ok) return { roles: [] as string[] };
-      const data = (await res.json()) as { roles: string[] };
-      return data;
+      if (error) throw error;
+      return (data ?? { roles: [] }) as { roles: string[] };
     },
   });
 };
