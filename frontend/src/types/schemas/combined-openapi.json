@@ -243,6 +243,99 @@
         ]
       }
     },
+    "/servers/{serverId}/owners": {
+      "post": {
+        "operationId": "ServerController_addOwner",
+        "parameters": [
+          {
+            "name": "serverId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddOwnerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Owner added successfully"
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Add an owner to a server by email",
+        "tags": [
+          "servers"
+        ]
+      }
+    },
+    "/servers/{serverId}/owners/{userId}": {
+      "delete": {
+        "operationId": "ServerController_removeOwner",
+        "parameters": [
+          {
+            "name": "serverId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner removed successfully"
+          }
+        },
+        "summary": "Remove an owner from a server",
+        "tags": [
+          "servers"
+        ]
+      }
+    },
+    "/servers/{serverId}/me": {
+      "get": {
+        "operationId": "ServerController_myRoles",
+        "parameters": [
+          {
+            "name": "serverId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the roles array for the current user in this server"
+          }
+        },
+        "summary": "Get the current user membership roles for a server",
+        "tags": [
+          "servers"
+        ]
+      }
+    },
     "/servers/{serverId}/channels": {
       "post": {
         "operationId": "ChannelsController_create",
@@ -334,6 +427,27 @@
                 }
               }
             }
+          }
+        },
+        "tags": [
+          "Channels"
+        ]
+      },
+      "delete": {
+        "operationId": "ChannelsController_deleteChannel",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletes a channel and all its access records"
           }
         },
         "tags": [
@@ -5348,6 +5462,16 @@
           "degreeModuleId"
         ]
       },
+      "SocietyCategory": {
+        "type": "string",
+        "enum": [
+          "Sports & Fitness",
+          "Academic & Professional",
+          "Arts & Culture",
+          "Community & Lifestyle"
+        ],
+        "description": "Category label — used to group citysocieties servers"
+      },
       "ServerViewDto": {
         "type": "object",
         "properties": {
@@ -5383,6 +5507,14 @@
           },
           "icon": {
             "type": "string"
+          },
+          "category": {
+            "description": "Category label — used to group citysocieties servers",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SocietyCategory"
+              }
+            ]
           },
           "createdAt": {
             "type": "string"
@@ -5463,6 +5595,19 @@
             "description": "Associated degree-module identifier"
           }
         }
+      },
+      "AddOwnerDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "student@city.ac.uk"
+          }
+        },
+        "required": [
+          "email"
+        ]
       },
       "CreateChannelDto": {
         "type": "object",

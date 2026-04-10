@@ -62,6 +62,57 @@ export interface paths {
         patch: operations["ServerController_update"];
         trace?: never;
     };
+    "/servers/{serverId}/owners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add an owner to a server by email */
+        post: operations["ServerController_addOwner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/owners/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove an owner from a server */
+        delete: operations["ServerController_removeOwner"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/servers/{serverId}/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the current user membership roles for a server */
+        get: operations["ServerController_myRoles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servers/{serverId}/channels": {
         parameters: {
             query?: never;
@@ -88,7 +139,7 @@ export interface paths {
         get: operations["ChannelsController_find"];
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["ChannelsController_deleteChannel"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3477,6 +3528,11 @@ export interface components {
             /** @description Associated degree-module identifier */
             degreeModuleId: string;
         };
+        /**
+         * @description Category label — used to group citysocieties servers
+         * @enum {string}
+         */
+        SocietyCategory: "Sports & Fitness" | "Academic & Professional" | "Arts & Culture" | "Community & Lifestyle";
         ServerViewDto: {
             id: string;
             name: string;
@@ -3489,6 +3545,8 @@ export interface components {
             /** @description BetterAuth user id when the server has an owner */
             ownerId?: string;
             icon?: string;
+            /** @description Category label — used to group citysocieties servers */
+            category?: components["schemas"]["SocietyCategory"];
             createdAt: string;
             updatedAt: string;
         };
@@ -3520,6 +3578,13 @@ export interface components {
             degreeId?: string;
             /** @description Associated degree-module identifier */
             degreeModuleId?: string;
+        };
+        AddOwnerDto: {
+            /**
+             * Format: email
+             * @example student@city.ac.uk
+             */
+            email: string;
         };
         CreateChannelDto: {
             name: string;
@@ -4062,6 +4127,77 @@ export interface operations {
             };
         };
     };
+    ServerController_addOwner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddOwnerDto"];
+            };
+        };
+        responses: {
+            /** @description Owner added successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ServerController_removeOwner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Owner removed successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    ServerController_myRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                serverId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Returns the roles array for the current user in this server */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     ChannelsController_list: {
         parameters: {
             query?: never;
@@ -4128,6 +4264,26 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ChannelViewDto"];
                 };
+            };
+        };
+    };
+    ChannelsController_deleteChannel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channelId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deletes a channel and all its access records */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
