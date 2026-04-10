@@ -319,6 +319,13 @@ export class ServerService {
     return map;
   }
 
+  async myRoles(serverId: string, userId: string): Promise<{ roles: string[] }> {
+    const membership = await Membership.findOne({ serverId, userId, status: 'active' })
+      .select('roles')
+      .lean<Pick<IMembership, 'roles'> | null>();
+    return { roles: membership?.roles ?? [] };
+  }
+
   async addOwner(serverId: string, email: string): Promise<{ ok: true }> {
     const server = await ServerModel.findById(serverId).lean<IServer | null>();
     if (!server) throw new NotFoundException('Server not found');

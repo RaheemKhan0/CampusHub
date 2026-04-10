@@ -126,4 +126,15 @@ export class ServerController {
   ) {
     return this.servers.removeOwner(serverId, userId, session.user.id);
   }
+
+  @Get(':serverId/me')
+  @ApiOperation({ summary: 'Get the current user membership roles for a server' })
+  @ApiParam({ name: 'serverId', type: String })
+  @ApiOkResponse({ description: 'Returns the roles array for the current user in this server' })
+  async myRoles(
+    @Session() session: UserSession,
+    @Param('serverId') serverId: string,
+  ) {
+    return this.servers.myRoles(serverId, session.user.id);
+  }
 }
