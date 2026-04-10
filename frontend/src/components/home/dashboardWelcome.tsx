@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import {
   ArrowRight,
   BookOpen,
+  GraduationCap,
   LogOut,
   MessageSquareText,
   UniversityIcon,
@@ -22,9 +24,13 @@ import { SocietyServersSection } from "./society-servers";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+type Tab = "modules" | "societies";
 
 export function DashboardWelcome() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<Tab>("modules");
 
   async function handleLogout() {
     await authClient.signOut();
@@ -80,11 +86,42 @@ export function DashboardWelcome() {
         <div className="pointer-events-none absolute -right-16 -top-12 hidden size-44 rounded-full bg-primary/20 blur-3xl md:block" />
       </section>
 
-      {/* ── University modules ───────────────────────────────────────── */}
-      <UniversityModulesSection />
+      {/* ── Tab switcher ─────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 rounded-xl border border-border/60 bg-muted/20 p-1.5">
+        <button
+          type="button"
+          onClick={() => setActiveTab("modules")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all",
+            activeTab === "modules"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <GraduationCap className="h-4 w-4" />
+          University Modules
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("societies")}
+          className={cn(
+            "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all",
+            activeTab === "societies"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          <Users className="h-4 w-4" />
+          Societies
+        </button>
+      </div>
 
-      {/* ── Society servers ──────────────────────────────────────────── */}
-      <SocietyServersSection />
+      {/* ── Tab content ──────────────────────────────────────────────── */}
+      {activeTab === "modules" ? (
+        <UniversityModulesSection />
+      ) : (
+        <SocietyServersSection />
+      )}
 
       {/* ── Snapshot cards ──────────────────────────────────────────── */}
       <section className="grid gap-4 md:grid-cols-3">
