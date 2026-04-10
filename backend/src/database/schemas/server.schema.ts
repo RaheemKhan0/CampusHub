@@ -18,7 +18,6 @@ const ServerSchema = new Schema<IServer>(
     name: { type: String, required: true, trim: true },
     degreeModuleId: {
       type: Schema.Types.ObjectId,
-      unique: true,
       ref: 'DegreeModule',
     },
     degreeId: { type: Schema.Types.ObjectId, ref: 'Degree' },
@@ -50,7 +49,7 @@ ServerSchema.index(
 );
 ServerSchema.index(
   { degreeModuleId: 1 },
-  { unique: true, name: 'degreeModule_idx' },
+  { unique: true, sparse: true, name: 'degreeModule_idx' },
 );
 ServerSchema.index({ degreeId: 1 }, { name: 'degreeId_idx' });
 
