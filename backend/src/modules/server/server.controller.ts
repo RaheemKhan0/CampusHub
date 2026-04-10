@@ -130,7 +130,16 @@ export class ServerController {
   @Get(':serverId/me')
   @ApiOperation({ summary: 'Get the current user membership roles for a server' })
   @ApiParam({ name: 'serverId', type: String })
-  @ApiOkResponse({ description: 'Returns the roles array for the current user in this server' })
+  @ApiOkResponse({
+    description: 'Returns the roles array for the current user in this server',
+    schema: {
+      type: 'object',
+      properties: {
+        roles: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['roles'],
+    },
+  })
   async myRoles(
     @Session() session: UserSession,
     @Param('serverId') serverId: string,

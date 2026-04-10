@@ -13,7 +13,7 @@ import { ChannelsService } from './channels.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelListResponseDto } from './dto/channel-list.dto';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
+import { ApiOkResponse, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { ChannelViewDto } from './dto/channel-view.dto';
 
 @Controller('servers/:serverId/channels')
@@ -63,6 +63,8 @@ export class ChannelsController {
 
   @Delete(':channelId')
   @UseGuards(ChannelManageGuard)
+  @ApiParam({ name: 'serverId', type: String })
+  @ApiParam({ name: 'channelId', type: String })
   @ApiOkResponse({ description: 'Deletes a channel and all its access records' })
   deleteChannel(@Param('channelId') channelId: string) {
     return this.channels.deleteChannel(channelId);
