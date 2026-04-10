@@ -13,7 +13,7 @@ import type { IMembership } from 'src/database/schemas/membership.schema';
 import { Membership } from 'src/database/schemas/membership.schema';
 
 type ChannelManageRequest = Request<
-  { channelId?: string },
+  { serverId?: string; channelId?: string },
   any,
   { channelId?: string }
 > & {
@@ -27,16 +27,25 @@ export class ChannelManageGuard implements CanActivate {
     const authUserId = req.user?.id;
     if (!authUserId) throw new ForbiddenException('Unauthenticated');
 
-    const channelId = req.params.channelId ?? req.body?.channelId;
-    if (!channelId) throw new NotFoundException('channelId missing');
+    let serverId: string | undefined;
 
-    const channel = await Channel.findById(channelId)
-      .select('serverId')
-      .lean<Pick<IChannel, 'serverId'> | null>();
-    if (!channel) throw new NotFoundException('Channel not found');
+    const channelId = req.params.channelId ?? req.body?.channelId;
+
+    if (channelId) {
+      // Existing channel operation — resolve serverId from the channel
+      const channel = await Channel.findById(channelId)
+        .select('serverId')
+        .lean<Pick<IChannel, 'serverId'> | null>();
+      if (!channel) throw new NotFoundException('Channel not found');
+      serverId = String(channel.serverId);
+    } else {
+      // Create operation — serverId comes from the route param
+      serverId = req.params.serverId;
+      if (!serverId) throw new NotFoundException('serverId missing');
+    }
 
     const membership = await Membership.findOne({
-      serverId: channel.serverId,
+      serverId,
       userId: authUserId,
       status: 'active',
     })
