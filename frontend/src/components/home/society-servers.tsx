@@ -4,10 +4,13 @@ import { useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRightIcon,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Loader2,
+  Palette,
   RefreshCw,
+  Trophy,
   Users,
 } from "lucide-react";
 
@@ -22,22 +25,50 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 type ServerView = components["schemas"]["ServerViewDto"];
 
+const CATEGORY_META: Record<
+  string,
+  { icon: React.ReactNode; accent: string; iconBg: string }
+> = {
+  "Sports & Fitness": {
+    icon: <Trophy className="h-4 w-4" />,
+    accent: "bg-orange-500",
+    iconBg: "bg-orange-500/10 text-orange-500",
+  },
+  "Academic & Professional": {
+    icon: <BookOpen className="h-4 w-4" />,
+    accent: "bg-sky-500",
+    iconBg: "bg-sky-500/10 text-sky-500",
+  },
+  "Arts & Culture": {
+    icon: <Palette className="h-4 w-4" />,
+    accent: "bg-violet-500",
+    iconBg: "bg-violet-500/10 text-violet-500",
+  },
+  "Community & Lifestyle": {
+    icon: <Users className="h-4 w-4" />,
+    accent: "bg-emerald-500",
+    iconBg: "bg-emerald-500/10 text-emerald-500",
+  },
+};
+
+const CATEGORY_ORDER = [
+  "Sports & Fitness",
+  "Academic & Professional",
+  "Arts & Culture",
+  "Community & Lifestyle",
+];
+
+const DEFAULT_META = {
+  icon: <Users className="h-4 w-4" />,
+  accent: "bg-slate-400",
+  iconBg: "bg-slate-400/10 text-slate-500",
+};
+
 export function SocietyServersSection() {
-  const router = useRouter();
-  const sliderRef = useRef<HTMLDivElement | null>(null);
-
-  const scroll = (direction: "left" | "right") => {
-    const el = sliderRef.current;
-    if (!el) return;
-    el.scrollBy({
-      left: direction === "left" ? -el.clientWidth : el.clientWidth,
-      behavior: "smooth",
-    });
-  };
-
   const {
     data,
     isLoading,
@@ -54,12 +85,30 @@ export function SocietyServersSection() {
     return data.pages.flatMap((page) => page.items);
   }, [data]);
 
+  const grouped = useMemo(() => {
+    const map = new Map<string, ServerView[]>();
+    for (const society of societies) {
+      const cat = society.category ?? "Other";
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat)!.push(society);
+    }
+    // Sort by the defined order, then append any unknown categories
+    const sorted = new Map<string, ServerView[]>();
+    for (const cat of CATEGORY_ORDER) {
+      if (map.has(cat)) sorted.set(cat, map.get(cat)!);
+    }
+    for (const [cat, items] of map) {
+      if (!sorted.has(cat)) sorted.set(cat, items);
+    }
+    return sorted;
+  }, [societies]);
+
   const renderContent = () => {
     if (isLoading) {
       return (
-        <div className="flex gap-4 overflow-x-hidden pb-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <SocietyCardSkeleton key={i} />
+        <div className="space-y-8">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <CategorySkeleton key={i} />
           ))}
         </div>
       );
@@ -103,72 +152,10 @@ export function SocietyServersSection() {
     }
 
     return (
-      <>
-        <div className="space-y-3">
-          <div className="flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => scroll("left")}
-              aria-label="Scroll left"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => scroll("right")}
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          <div
-            ref={sliderRef}
-            className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4"
-          >
-            {societies.map((society) => (
-              <Card
-                key={society.id}
-                className="flex min-w-[260px] max-w-[300px] flex-shrink-0 snap-start flex-col overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:shadow-md"
-              >
-                <div className="h-1.5 w-full shrink-0 bg-primary/60" />
-                <CardHeader className="pb-3">
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Users className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary/70">
-                        Society
-                      </p>
-                      <CardTitle className="mt-0.5 line-clamp-2 text-base font-bold leading-snug">
-                        {society.name}
-                      </CardTitle>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1 pb-3">
-                  <p className="line-clamp-1 text-sm capitalize text-muted-foreground">
-                    {society.slug.replace(/-/g, " ")}
-                  </p>
-                </CardContent>
-                <CardFooter className="border-t border-border/40 pt-3">
-                  <Button
-                    size="sm"
-                    onClick={() => router.push(`/dashboard/server/${society.id}`)}
-                    className="ml-auto gap-1.5"
-                  >
-                    Open society
-                    <ArrowRightIcon className="h-3.5 w-3.5" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </div>
+      <div className="space-y-10">
+        {Array.from(grouped.entries()).map(([category, items]) => (
+          <CategoryRow key={category} category={category} items={items} />
+        ))}
 
         {hasNextPage && (
           <div className="flex justify-center">
@@ -184,17 +171,17 @@ export function SocietyServersSection() {
                   Loading more
                 </>
               ) : (
-                "Load more societies"
+                "Load more"
               )}
             </Button>
           </div>
         )}
-      </>
+      </div>
     );
   };
 
   return (
-    <section className="space-y-5">
+    <section className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary/70">
@@ -204,8 +191,7 @@ export function SocietyServersSection() {
             Find your community
           </h2>
           <p className="text-sm text-muted-foreground">
-            Browse society servers for sports clubs, academic groups, and student
-            interest communities.
+            Browse society servers across sports, academics, arts, and more.
           </p>
         </div>
         <Button
@@ -222,25 +208,142 @@ export function SocietyServersSection() {
   );
 }
 
-function SocietyCardSkeleton() {
+// ─── Category row ─────────────────────────────────────────────────────────────
+
+function CategoryRow({
+  category,
+  items,
+}: {
+  category: string;
+  items: ServerView[];
+}) {
+  const router = useRouter();
+  const sliderRef = useRef<HTMLDivElement | null>(null);
+  const meta = CATEGORY_META[category] ?? DEFAULT_META;
+
+  const scroll = (direction: "left" | "right") => {
+    const el = sliderRef.current;
+    if (!el) return;
+    el.scrollBy({
+      left: direction === "left" ? -el.clientWidth : el.clientWidth,
+      behavior: "smooth",
+    });
+  };
+
   return (
-    <Card className="min-w-[260px] max-w-[300px] flex-shrink-0 snap-start overflow-hidden border-border/50">
-      <Skeleton className="h-1.5 w-full rounded-none" />
-      <CardHeader className="pb-3">
-        <div className="flex items-start gap-3">
-          <Skeleton className="h-9 w-9 shrink-0 rounded-xl" />
-          <div className="space-y-2">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-5 w-36" />
-          </div>
+    <div className="space-y-4">
+      {/* Category header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span
+            className={cn(
+              "flex h-7 w-7 items-center justify-center rounded-lg",
+              meta.iconBg,
+            )}
+          >
+            {meta.icon}
+          </span>
+          <h3 className="text-base font-semibold text-foreground">{category}</h3>
+          <span className="text-xs text-muted-foreground/60">
+            {items.length} {items.length === 1 ? "society" : "societies"}
+          </span>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-2 pb-3">
-        <Skeleton className="h-4 w-full" />
-      </CardContent>
-      <CardFooter className="border-t border-border/40 pt-3">
-        <Skeleton className="ml-auto h-8 w-28" />
-      </CardFooter>
-    </Card>
+        <div className="flex items-center gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => scroll("left")}
+            aria-label="Scroll left"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-7 w-7"
+            onClick={() => scroll("right")}
+            aria-label="Scroll right"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Horizontal slider */}
+      <div
+        ref={sliderRef}
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2"
+      >
+        {items.map((society) => (
+          <Card
+            key={society.id}
+            className="flex min-w-[240px] max-w-[280px] flex-shrink-0 snap-start flex-col overflow-hidden border-border/60 transition-all hover:-translate-y-1 hover:shadow-md"
+          >
+            <div className={cn("h-1.5 w-full shrink-0", meta.accent)} />
+            <CardHeader className="pb-2">
+              <div className="flex items-start gap-2.5">
+                <span
+                  className={cn(
+                    "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                    meta.iconBg,
+                  )}
+                >
+                  {meta.icon}
+                </span>
+                <CardTitle className="line-clamp-2 text-sm font-semibold leading-snug">
+                  {society.name}
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardFooter className="mt-auto border-t border-border/40 pt-3">
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => router.push(`/dashboard/server/${society.id}`)}
+                className="ml-auto gap-1.5"
+              >
+                Open
+                <ArrowRightIcon className="h-3.5 w-3.5" />
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Skeletons ────────────────────────────────────────────────────────────────
+
+function CategorySkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-7 w-7 rounded-lg" />
+        <Skeleton className="h-5 w-40" />
+      </div>
+      <div className="flex gap-4 overflow-x-hidden pb-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Card
+            key={i}
+            className="min-w-[240px] max-w-[280px] flex-shrink-0 overflow-hidden border-border/50"
+          >
+            <Skeleton className="h-1.5 w-full rounded-none" />
+            <CardHeader className="pb-2">
+              <div className="flex items-start gap-2.5">
+                <Skeleton className="h-8 w-8 shrink-0 rounded-lg" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            </CardHeader>
+            <CardFooter className="border-t border-border/40 pt-3">
+              <Skeleton className="ml-auto h-8 w-16" />
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }
