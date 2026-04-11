@@ -47,9 +47,18 @@ const formatNotificationToast = (event: NotificationEvent) => {
   const data = event.data;
 
   if (isNotificationDto(data)) {
+    const channelName =
+      isRecord(data.data) && typeof data.data.channelName === "string"
+        ? data.data.channelName
+        : undefined;
+    const subtitle = channelName
+      ? data.serverName
+        ? `#${channelName} · ${data.serverName}`
+        : `#${channelName}`
+      : data.serverName;
     return {
-      title: data.serverName ?? data.title ?? "New notification",
-      subtitle: data.title ? `#${data.title}` : undefined,
+      title: data.title ?? data.serverName ?? "New notification",
+      subtitle,
       body: data.body,
       serverId: data.serverId,
       channelId: data.channelId,
@@ -142,15 +151,13 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
       router.push(
         `/dashboard/server/${notification.serverId}/channel/${notification.channelId}`,
       );
+    } else if (notification.serverId) {
+      router.push(`/dashboard/server/${notification.serverId}`);
     }
   };
 
   useEffect(() => {
     const subscription = notification$.subscribe((event) => {
-      if (event.type !== "message.create" && event.type !== "message.mention") {
-        return;
-      }
-
       const key = getNotificationKey(event);
       if (key) {
         if (hasNotificationKey(key)) {
@@ -170,27 +177,35 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
       const notificationDto = isNotificationDto(event.data)
         ? event.data
         : undefined;
-      toast(title, {
-        description: [subtitle, body].filter(Boolean).join(" • ") || undefined,
-        id: key,
-        action:
-          notificationDto && payloadServerId && payloadChannelId
-            ? {
-                label: "View",
-                onClick: () => {
-                  if (notificationDto) {
-                    navigateToNotification(notificationDto, router);
-                  }
-                },
-              }
-            : undefined,
-        onClick: () => {
-          if (notificationDto) {
-            navigateToNotification(notificationDto, router);
-          }
-        },
-      });
-      if (notificationDto) {
+
+      // Skip toast + cache insert for notifications the server already marked
+      // as read (audit trail for users watching the channel in real time).
+      const isAlreadyRead = notificationDto?.status === "read";
+
+      if (!isAlreadyRead) {
+        toast(title, {
+          description: [subtitle, body].filter(Boolean).join(" • ") || undefined,
+          id: key,
+          action:
+            notificationDto && (payloadServerId || payloadChannelId)
+              ? {
+                  label: "View",
+                  onClick: () => {
+                    if (notificationDto) {
+                      navigateToNotification(notificationDto);
+                    }
+                  },
+                }
+              : undefined,
+          onClick: () => {
+            if (notificationDto) {
+              navigateToNotification(notificationDto);
+            }
+          },
+        });
+      }
+
+      if (notificationDto && !isAlreadyRead) {
         queryClient.setQueryData(
           queryKeys.notifications.unread,
           (current?: NotificationView[]) => {
@@ -205,7 +220,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
             return next.slice(0, 50);
           },
         );
-      } else {
+      } else if (!notificationDto) {
         queryClient.invalidateQueries({
           queryKey: queryKeys.notifications.unread,
         });
