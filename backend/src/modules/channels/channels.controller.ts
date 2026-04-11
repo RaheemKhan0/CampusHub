@@ -64,9 +64,10 @@ export class ChannelsController {
   addMembers(
     @Param('channelId') channelId: string,
     @Body() body: { userId: string },
+    @Session() session: UserSession,
   ) {
     const ids = body.userId;
-    return this.channels.addMember(channelId, ids);
+    return this.channels.addMember(channelId, ids, session.user.id);
   }
 
   @Delete(':channelId')
