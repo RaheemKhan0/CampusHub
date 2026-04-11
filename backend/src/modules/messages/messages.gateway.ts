@@ -21,7 +21,6 @@ import { ChannelPresenceService } from './channel-presence.service';
 import { WsAuthGuard } from 'src/lib/guards/WsAuthGuard';
 import { ChannelTargetDto } from './dto/channel-target.dto';
 import { SendMessageDto } from './dto/send-message.dto';
-import { MessageViewDto } from './dto/message-view.dto';
 import { Channel, IChannel } from 'src/database/schemas/channel.schema';
 import type { IMembership } from 'src/database/schemas/membership.schema';
 import { Membership } from 'src/database/schemas/membership.schema';
@@ -137,16 +136,16 @@ export class MessagesGateway {
   async handleMessageCreate(
     @ConnectedSocket() client: GatewaySocket,
     @MessageBody() payload: SendMessageDto,
-    callback?: (response: MessageAckDto) => void,
-  ): Promise<MessageViewDto> {
+  ): Promise<MessageAckDto> {
     const user = this.getClientUser(client);
 
-    await this.ensureChannelAccess(
-      user.id,
-      payload.serverId,
-      payload.channelId,
-    );
     try {
+      await this.ensureChannelAccess(
+        user.id,
+        payload.serverId,
+        payload.channelId,
+      );
+
       const message = await this.messagesService.createMessage(
         payload.serverId,
         payload.channelId,
@@ -156,19 +155,21 @@ export class MessagesGateway {
       );
 
       const room = channelRoom(String(payload.channelId));
-      this.logger.log(`user : ${user?.name} broadcasted to room : ${room}`);
+      this.logger.debug(`${user?.name ?? user.id} broadcast to room ${room}`);
+      // Broadcast the real message to everyone else in the channel room. The
+      // sender receives the same payload via the acknowledgement return value
+      // below, so we don't echo it back to `client` to avoid duplicate inserts.
       client.broadcast.to(room).emit('message:created', message);
-      if (typeof callback === 'function') {
-        callback({ success: true, message });
-      }
-      return message;
+
+      return { success: true, message };
     } catch (error) {
       const err =
         error instanceof Error ? error : new Error('Failed to send message');
-      if (typeof callback === 'function') {
-        callback({ success: false, error: { message: err.message } });
-      }
-      throw error;
+      this.logger.warn(`message:create failed: ${err.message}`);
+      return {
+        success: false,
+        error: { message: err.message },
+      };
     }
   }
 
