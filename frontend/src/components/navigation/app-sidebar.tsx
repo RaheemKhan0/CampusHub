@@ -313,10 +313,21 @@ export function AppSidebar() {
       );
     }
 
+    const isUnimodule = server?.type === "unimodules";
+    const allChannels = isUnimodule
+      ? [...publicChannels, ...privateChannels]
+      : null;
+
     return (
       <div className="flex-1 space-y-1 overflow-y-auto py-1">
-        {renderChannelList({ title: "Public channels", channels: publicChannels })}
-        {renderChannelList({ title: "Private channels", channels: privateChannels })}
+        {isUnimodule ? (
+          renderChannelList({ title: "Channels", channels: allChannels! })
+        ) : (
+          <>
+            {renderChannelList({ title: "Public channels", channels: publicChannels })}
+            {renderChannelList({ title: "Private channels", channels: privateChannels })}
+          </>
+        )}
       </div>
     );
   };
