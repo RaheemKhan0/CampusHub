@@ -71,7 +71,23 @@ export class ChannelAccessGuard implements CanActivate {
       return true;
     }
 
-    // Society servers and all other types: require membership
+    if (server.type === 'citysocieties') {
+      // Public channels: open to everyone
+      if (channel.privacy === 'public') return true;
+
+      // Hidden channels: membership required
+      const membership = await Membership.findOne({
+        serverId: channel.serverId,
+        userId,
+        status: 'active',
+      })
+        .select('_id')
+        .lean<Pick<IMembership, '_id'> | null>();
+      if (!membership) throw new ForbiddenException('You must be a member of this society to access this channel');
+      return true;
+    }
+
+    // All other types: require membership, admins bypass hidden check
     const roleDoc = await Membership.findOne({
       serverId: channel.serverId,
       userId,
