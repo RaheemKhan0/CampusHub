@@ -66,10 +66,6 @@ export function DashboardWelcome() {
               sidebar or jump straight into a module below.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <Button className="gap-2" size="sm">
-                Browse modules
-                <ArrowRight className="h-4 w-4" />
-              </Button>
               <NotificationBell />
               <Button
                 variant="outline"

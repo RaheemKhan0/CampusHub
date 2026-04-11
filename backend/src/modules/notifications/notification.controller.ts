@@ -102,23 +102,38 @@ export class NotificationContoller {
     );
     return this.notifications.stream.pipe(
       filter((payload) => {
-        const actorId = (payload.data as any)?.actorId;
         if (!currentUserId) {
-          this.logger.verbose('Rejecting SSE event because client userId is missing');
+          this.logger.verbose(
+            'Rejecting SSE event because client userId is missing',
+          );
           return false;
         }
-        if (actorId && actorId === currentUserId) {
-          this.logger.verbose(
-            `Skipping SSE event for user=${currentUserId} because actorId matches`,
-          );
+        const data = payload.data as {
+          userId?: string;
+          actorId?: string;
+        };
+
+        // CRITICAL: only forward notifications whose recipient matches the
+        // subscriber. The stream is a single shared Subject, so every client
+        // receives every event — without this filter, userA sees userB's
+        // notifications.
+        const recipientId = data?.userId;
+        if (recipientId && recipientId !== currentUserId) {
+          return false;
+        }
+
+        // Defence in depth — drop events the user authored themselves.
+        if (data?.actorId && data.actorId === currentUserId) {
           return false;
         }
         return true;
       }),
-      map((payload): MessageEvent => ({
-        data: JSON.stringify(payload.data),
-        type: payload.event,
-      })),
+      map(
+        (payload): MessageEvent => ({
+          data: JSON.stringify(payload.data),
+          type: payload.event,
+        }),
+      ),
     );
   }
 }
