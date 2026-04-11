@@ -2,6 +2,7 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Channel, IChannel } from 'src/database/schemas/channel.schema';
+import { ServerModel } from 'src/database/schemas/server.schema';
 import { ChannelAccess, IChannelAccess } from 'src/database/schemas/channel-access.schema';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelViewDto } from './dto/channel-view.dto';
@@ -107,27 +108,42 @@ export class ChannelsService {
   async list(userId: string, serverId: string) {
     const sId = new Types.ObjectId(serverId);
 
+    const server = await ServerModel.findById(sId)
+      .select('type')
+      .lean<{ type: string } | null>();
+
     const publicDocs = await Channel.find({ serverId: sId, privacy: 'public' })
       .sort({ position: 1, createdAt: -1 })
       .lean<IChannel[]>()
       .exec();
 
-    const accessDocs = await ChannelAccess.find({ userId })
-      .select('channelId')
-      .lean<Pick<IChannelAccess, 'channelId'>[]>()
-      .exec();
+    let privateDocs: IChannel[];
 
-    const channelIds = accessDocs.map((doc) => doc.channelId);
-    const privateDocs = channelIds.length
-      ? await Channel.find({
-          _id: { $in: channelIds },
-          serverId: sId,
-          privacy: 'hidden',
-        })
-          .sort({ position: 1, createdAt: -1 })
-          .lean<IChannel[]>()
-          .exec()
-      : [];
+    if (server?.type === 'citysocieties') {
+      // Return all hidden channels so non-members can see them (but not access them)
+      privateDocs = await Channel.find({ serverId: sId, privacy: 'hidden' })
+        .sort({ position: 1, createdAt: -1 })
+        .lean<IChannel[]>()
+        .exec();
+    } else {
+      // Only return hidden channels the user has explicit access to
+      const accessDocs = await ChannelAccess.find({ userId })
+        .select('channelId')
+        .lean<Pick<IChannelAccess, 'channelId'>[]>()
+        .exec();
+
+      const channelIds = accessDocs.map((doc) => doc.channelId);
+      privateDocs = channelIds.length
+        ? await Channel.find({
+            _id: { $in: channelIds },
+            serverId: sId,
+            privacy: 'hidden',
+          })
+            .sort({ position: 1, createdAt: -1 })
+            .lean<IChannel[]>()
+            .exec()
+        : [];
+    }
 
     const publicChannels = publicDocs.map((doc) => this.toChannelView(doc));
     const privateChannels = privateDocs.map((doc) => this.toChannelView(doc));
