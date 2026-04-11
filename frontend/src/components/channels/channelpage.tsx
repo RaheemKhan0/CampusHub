@@ -119,7 +119,7 @@ export default function ChannelPage() {
               error: ack.error?.message ?? "Failed to send.",
             };
           }
-          return []; // remove; the real message will arrive via message:created broadcast
+          return []; // remove — the real message is inserted into the cache below via the ack payload
         }),
       );
 
