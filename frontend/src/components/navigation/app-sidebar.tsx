@@ -43,6 +43,7 @@ type ChannelView = {
   id: string;
   name: string;
   type: string;
+  privacy: string;
   serverId: string;
 };
 
@@ -64,6 +65,7 @@ export function AppSidebar() {
   const viewingServer = pathname?.includes("/dashboard/server/");
 
   const [addOpen, setAddOpen] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [form, setForm] = useState<CreateForm>({
     name: "",
     type: "text",
@@ -115,13 +117,21 @@ export function AppSidebar() {
 
   const handleCreate = async () => {
     if (!form.name.trim() || !serverId) return;
-    await createChannel.mutateAsync({
-      name: form.name.trim(),
-      type: form.type,
-      privacy: form.privacy,
-    });
-    setForm({ name: "", type: "text", privacy: "public" });
-    setAddOpen(false);
+    setCreateError(null);
+    try {
+      await createChannel.mutateAsync({
+        name: form.name.trim(),
+        type: form.type,
+        privacy: form.privacy,
+      });
+      setForm({ name: "", type: "text", privacy: "public" });
+      setAddOpen(false);
+    } catch (err: unknown) {
+      const msg =
+        (err as { message?: string })?.message ??
+        "Failed to create channel. Please try again.";
+      setCreateError(msg);
+    }
   };
 
   const handleDelete = (channelId: string, e: React.MouseEvent) => {
@@ -171,7 +181,7 @@ export function AppSidebar() {
                       : "border-transparent text-muted-foreground hover:border-primary/20 hover:bg-muted/50 hover:text-foreground",
                   )}
                 >
-                  {channel.type === "private" ? (
+                  {channel.privacy === "hidden" ? (
                     <Lock
                       className={cn(
                         "h-3.5 w-3.5 shrink-0 transition-colors",
@@ -374,7 +384,13 @@ export function AppSidebar() {
         </SidebarFooter>
       </Sidebar>
 
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+      <Dialog
+        open={addOpen}
+        onOpenChange={(open) => {
+          setAddOpen(open);
+          if (!open) setCreateError(null);
+        }}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Add channel</DialogTitle>
@@ -386,9 +402,15 @@ export function AppSidebar() {
                 id="ch-name"
                 placeholder="e.g. announcements"
                 value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                onChange={(e) => {
+                  setCreateError(null);
+                  setForm((f) => ({ ...f, name: e.target.value }));
+                }}
                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
               />
+              {createError && (
+                <p className="text-xs text-destructive">{createError}</p>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Type</Label>
