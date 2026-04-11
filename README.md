@@ -52,7 +52,7 @@ BETTER_AUTH_SECRET=change-me
 The dev compose file spins up Mongo, the Nest API, and Next.js dev server with hot reloading:
 
 ```bash
-docker compose -f docker-compose.dev.yml up --build
+docker compose up --build
 ```
 
 Mongo is exposed on `localhost:27016`, API on `localhost:4000`, and web on `localhost:3000`.
