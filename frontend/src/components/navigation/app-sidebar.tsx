@@ -1,8 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter, usePathname } from "next/navigation";
-import { BookOpen, Hash, Lock, RefreshCw, UniversityIcon } from "lucide-react";
+import {
+  BookOpen,
+  Hash,
+  Lock,
+  RefreshCw,
+  UniversityIcon,
+  Plus,
+  Trash2,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -16,14 +24,33 @@ import { ModeToggle } from "../utilities/modeToggle";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useServer } from "@/hooks/servers/useServer";
 import { useChannels } from "@/hooks/channels/useChannels";
+import { useMyServerRole } from "@/hooks/servers/useMyServerRole";
+import { useCreateChannel } from "@/hooks/channels/useCreateChannel";
+import { useDeleteChannel } from "@/hooks/channels/useDeleteChannel";
 
 type ChannelView = {
   id: string;
   name: string;
   type: string;
+  privacy: string;
   serverId: string;
+};
+
+type CreateForm = {
+  name: string;
+  type: "text" | "qa";
+  privacy: "public" | "hidden";
 };
 
 export function AppSidebar() {
@@ -36,6 +63,14 @@ export function AppSidebar() {
     ? serverIdParam[0]
     : serverIdParam;
   const viewingServer = pathname?.includes("/dashboard/server/");
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [form, setForm] = useState<CreateForm>({
+    name: "",
+    type: "text",
+    privacy: "public",
+  });
 
   const activeChannelId = useMemo(() => {
     const match = pathname?.match(/\/channel\/([^/]+)/);
@@ -57,6 +92,18 @@ export function AppSidebar() {
     enabled: Boolean(serverId) && viewingServer,
   });
 
+  const { data: roleData } = useMyServerRole(
+    viewingServer ? serverId : undefined,
+  );
+
+  const canManage = useMemo(() => {
+    const roles = roleData?.roles ?? [];
+    return roles.includes("owner") || roles.includes("admin");
+  }, [roleData]);
+
+  const createChannel = useCreateChannel(serverId ?? "");
+  const deleteChannel = useDeleteChannel(serverId ?? "");
+
   const publicChannels = useMemo(
     () => channelData?.publicChannels ?? [],
     [channelData],
@@ -67,6 +114,30 @@ export function AppSidebar() {
   );
 
   const totalChannels = publicChannels.length + privateChannels.length;
+
+  const handleCreate = async () => {
+    if (!form.name.trim() || !serverId) return;
+    setCreateError(null);
+    try {
+      await createChannel.mutateAsync({
+        name: form.name.trim(),
+        type: form.type,
+        privacy: form.privacy,
+      });
+      setForm({ name: "", type: "text", privacy: "public" });
+      setAddOpen(false);
+    } catch (err: unknown) {
+      const msg =
+        (err as { message?: string })?.message ??
+        "Failed to create channel. Please try again.";
+      setCreateError(msg);
+    }
+  };
+
+  const handleDelete = (channelId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    deleteChannel.mutate(channelId);
+  };
 
   const renderChannelList = ({
     title,
@@ -110,7 +181,7 @@ export function AppSidebar() {
                       : "border-transparent text-muted-foreground hover:border-primary/20 hover:bg-muted/50 hover:text-foreground",
                   )}
                 >
-                  {channel.type === "private" ? (
+                  {channel.privacy === "hidden" ? (
                     <Lock
                       className={cn(
                         "h-3.5 w-3.5 shrink-0 transition-colors",
@@ -129,7 +200,24 @@ export function AppSidebar() {
                       )}
                     />
                   )}
-                  <span className="truncate">{channel.name}</span>
+                  <span className="truncate flex-1">{channel.name}</span>
+                  {canManage && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => handleDelete(channel.id, e)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ")
+                          handleDelete(channel.id, e as unknown as React.MouseEvent);
+                      }}
+                      className={cn(
+                        "ml-auto hidden h-5 w-5 items-center justify-center rounded text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive group-hover:flex",
+                        deleteChannel.isPending && "pointer-events-none opacity-40",
+                      )}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </span>
+                  )}
                 </button>
               </li>
             );
@@ -210,14 +298,36 @@ export function AppSidebar() {
           <p className="text-xs leading-relaxed text-muted-foreground/70">
             No channels yet for this module.
           </p>
+          {canManage && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5 text-xs"
+              onClick={() => setAddOpen(true)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add channel
+            </Button>
+          )}
         </div>
       );
     }
 
+    const isUnimodule = server?.type === "unimodules";
+    const allChannels = isUnimodule
+      ? [...publicChannels, ...privateChannels]
+      : null;
+
     return (
       <div className="flex-1 space-y-1 overflow-y-auto py-1">
-        {renderChannelList({ title: "Public channels", channels: publicChannels })}
-        {renderChannelList({ title: "Private channels", channels: privateChannels })}
+        {isUnimodule ? (
+          renderChannelList({ title: "Channels", channels: allChannels! })
+        ) : (
+          <>
+            {renderChannelList({ title: "Public channels", channels: publicChannels })}
+            {renderChannelList({ title: "Private channels", channels: privateChannels })}
+          </>
+        )}
       </div>
     );
   };
@@ -228,47 +338,145 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar
-      className={cn(
-        "flex-shrink-0 border-r border-border/40 dark:bg-[#121212]",
-      )}
-    >
-      <SidebarHeader className="border-b border-border/40 pb-3">
-        <button
-          type="button"
-          onClick={handleNavigateHome}
-          className="flex w-full items-center gap-3 rounded-xl border border-transparent px-2 py-2 transition-all hover:border-primary/30 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-        >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <UniversityIcon className="h-[18px] w-[18px]" />
-          </span>
-          <div className="min-w-0 text-left leading-tight">
-            <p className="text-[0.6rem] font-bold uppercase tracking-[0.35em] text-primary/60">
-              Campus Hub
-            </p>
-            <p className="truncate text-sm font-semibold text-foreground">
-              {server?.name ?? "Home dashboard"}
-            </p>
+    <>
+      <Sidebar
+        className={cn(
+          "flex-shrink-0 border-r border-border/40 dark:bg-[#121212]",
+        )}
+      >
+        <SidebarHeader className="border-b border-border/40 pb-3">
+          <button
+            type="button"
+            onClick={handleNavigateHome}
+            className="flex w-full items-center gap-3 rounded-xl border border-transparent px-2 py-2 transition-all hover:border-primary/30 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <UniversityIcon className="h-[18px] w-[18px]" />
+            </span>
+            <div className="min-w-0 text-left leading-tight">
+              <p className="text-[0.6rem] font-bold uppercase tracking-[0.35em] text-primary/60">
+                Campus Hub
+              </p>
+              <p className="truncate text-sm font-semibold text-foreground">
+                {server?.name ?? "Home dashboard"}
+              </p>
+            </div>
+          </button>
+        </SidebarHeader>
+
+        <SidebarContent className="flex flex-col">
+          <SidebarGroup className="flex-1 px-0">{bodyContent()}</SidebarGroup>
+        </SidebarContent>
+
+        <SidebarFooter className="border-t border-border/40">
+          <div className="flex w-full items-center justify-between px-1">
+            {viewingServer && totalChannels > 0 ? (
+              <p className="text-xs text-muted-foreground/50">
+                {totalChannels} channel{totalChannels !== 1 ? "s" : ""}
+              </p>
+            ) : (
+              <span />
+            )}
+            <div className="flex items-center gap-2">
+              {canManage && viewingServer && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 text-muted-foreground/50 hover:text-foreground"
+                  onClick={() => setAddOpen(true)}
+                  title="Add channel"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              )}
+              <ModeToggle />
+            </div>
           </div>
-        </button>
-      </SidebarHeader>
+        </SidebarFooter>
+      </Sidebar>
 
-      <SidebarContent className="flex flex-col">
-        <SidebarGroup className="flex-1 px-0">{bodyContent()}</SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="border-t border-border/40">
-        <div className="flex w-full items-center justify-between px-1">
-          {viewingServer && totalChannels > 0 ? (
-            <p className="text-xs text-muted-foreground/50">
-              {totalChannels} channel{totalChannels !== 1 ? "s" : ""}
-            </p>
-          ) : (
-            <span />
-          )}
-          <ModeToggle />
-        </div>
-      </SidebarFooter>
-    </Sidebar>
+      <Dialog
+        open={addOpen}
+        onOpenChange={(open) => {
+          setAddOpen(open);
+          if (!open) setCreateError(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Add channel</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="ch-name">Name</Label>
+              <Input
+                id="ch-name"
+                placeholder="e.g. announcements"
+                value={form.name}
+                onChange={(e) => {
+                  setCreateError(null);
+                  setForm((f) => ({ ...f, name: e.target.value }));
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+              />
+              {createError && (
+                <p className="text-xs text-destructive">{createError}</p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label>Type</Label>
+              <div className="flex gap-2">
+                {(["text", "qa"] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, type: t }))}
+                    className={cn(
+                      "flex-1 rounded-md border py-1.5 text-sm capitalize transition-colors",
+                      form.type === t
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Privacy</Label>
+              <div className="flex gap-2">
+                {(["public", "hidden"] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, privacy: p }))}
+                    className={cn(
+                      "flex-1 rounded-md border py-1.5 text-sm capitalize transition-colors",
+                      form.privacy === p
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-muted-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={!form.name.trim() || createChannel.isPending}
+              onClick={handleCreate}
+            >
+              {createChannel.isPending ? "Creating…" : "Create"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

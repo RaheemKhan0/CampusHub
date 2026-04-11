@@ -55,8 +55,108 @@ export class NotificationService {
 
   async createNotification(
     dto: CreateNotificationDto,
-  ): Promise<NotificationViewDto> {
-    const notification = await Notification.create({
+    options?: { initialStatus?: NotificationStatus },
+  ): Promise<NotificationViewDto | null> {
+    const initialStatus = options?.initialStatus ?? 'unread';
+    const now = new Date();
+
+    let notification: INotification;
+    try {
+      notification = await Notification.create(
+        this.buildNotificationDoc(dto, initialStatus, now),
+      );
+    } catch (err: unknown) {
+      if (this.isDuplicateKeyError(err) && dto.dedupeKey) {
+        this.logger.debug(
+          `createNotification: dropped duplicate for dedupeKey=${dto.dedupeKey}`,
+        );
+        return null;
+      }
+      throw err;
+    }
+
+    const view = this.toNotificationView(notification);
+
+    // Only emit live events for genuinely-unread notifications. Already-read
+    // notifications exist purely as an audit trail and should not trigger UI
+    // toasts or badge bumps on the recipient's active session.
+    if (initialStatus !== 'read') {
+      this.emitNotificationCreated(view);
+    }
+
+    return view;
+  }
+
+  /**
+   * Bulk-insert a batch of notifications in a single round-trip using
+   * `insertMany({ ordered: false })`. Duplicate-key failures on `dedupeKey`
+   * are silently skipped; successful inserts still produce per-notification
+   * SSE emits.
+   */
+  async createNotifications(
+    dtos: CreateNotificationDto[],
+    options?: { initialStatus?: NotificationStatus },
+  ): Promise<NotificationViewDto[]> {
+    if (!dtos.length) return [];
+
+    const initialStatus = options?.initialStatus ?? 'unread';
+    const now = new Date();
+    const docs = dtos.map((dto) =>
+      this.buildNotificationDoc(dto, initialStatus, now),
+    );
+
+    let inserted: INotification[] = [];
+    try {
+      inserted = (await Notification.insertMany(docs, {
+        ordered: false,
+      })) as unknown as INotification[];
+    } catch (err: unknown) {
+      // With ordered:false, mongoose throws a BulkWriteError that still
+      // exposes the successfully-inserted docs. Duplicate-key failures on
+      // dedupeKey are expected and safe to ignore.
+      const bulkErr = err as {
+        insertedDocs?: INotification[];
+        writeErrors?: { code?: number }[];
+        code?: number;
+      };
+
+      if (Array.isArray(bulkErr.insertedDocs)) {
+        inserted = bulkErr.insertedDocs;
+      }
+
+      const hasNonDupeError = (bulkErr.writeErrors ?? []).some(
+        (writeErr) => writeErr?.code !== 11000,
+      );
+      if (hasNonDupeError) {
+        this.logger.warn(
+          `createNotifications: partial failure — ${
+            inserted.length
+          }/${dtos.length} inserted, non-dedupe write errors present`,
+        );
+      } else if (inserted.length < dtos.length) {
+        this.logger.debug(
+          `createNotifications: ${
+            dtos.length - inserted.length
+          } duplicates skipped via dedupeKey`,
+        );
+      }
+    }
+
+    const views = inserted.map((doc) => this.toNotificationView(doc));
+    if (initialStatus !== 'read') {
+      for (const view of views) {
+        this.emitNotificationCreated(view);
+      }
+    }
+    return views;
+  }
+
+  private buildNotificationDoc(
+    dto: CreateNotificationDto,
+    initialStatus: NotificationStatus,
+    now: Date,
+  ): Record<string, unknown> {
+    return {
       userId: dto.userId,
       actorId: dto.actorId,
       serverId: dto.serverId,
@@ -66,13 +166,17 @@ export class NotificationService {
       title: dto.title,
       body: dto.body,
       data: dto.data ?? {},
+      dedupeKey: dto.dedupeKey,
       expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
-    });
+      status: initialStatus,
+      ...(initialStatus === 'read' ? { readAt: now, seenAt: now } : {}),
+    };
+  }
 
-    const view = this.toNotificationView(notification);
-    this.emitNotificationCreated(view);
-
-    return view;
+  private isDuplicateKeyError(err: unknown): boolean {
+    if (typeof err !== 'object' || err === null) return false;
+    const code = (err as { code?: number }).code;
+    return code === 11000;
   }
 
   async listNotifications(

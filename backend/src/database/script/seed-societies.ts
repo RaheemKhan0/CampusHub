@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import slugify from 'slugify';
 import { connectDB } from '../../lib/connectMongodb';
 import { ServerModel } from '../schemas/server.schema';
+import { Membership } from '../schemas/membership.schema';
+import { AppUser } from '../schemas/user.schema';
 import { type SocietyCategory } from '../types';
 
 const societies: { name: string; category: SocietyCategory }[] = [
@@ -42,18 +44,37 @@ const societies: { name: string; category: SocietyCategory }[] = [
   { name: 'International Students Society',      category: 'Community & Lifestyle' },
 ];
 
+const DEFAULT_OWNER_EMAIL = 'muhammad.khan.45@city.ac.uk';
+
 async function main() {
   await connectDB();
 
+  // Clear existing society servers and their memberships
+  const existingServers = await ServerModel.find({ type: 'citysocieties' }).select('_id').lean();
+  const existingIds = existingServers.map((s) => s._id);
+  if (existingIds.length) {
+    await Membership.deleteMany({ serverId: { $in: existingIds } });
+  }
   const deleted = await ServerModel.deleteMany({ type: 'citysocieties' });
   console.log(`Cleared ${deleted.deletedCount} existing society records.`);
+
+  // Resolve default owner
+  const defaultOwner = await AppUser.findOne({ email: DEFAULT_OWNER_EMAIL })
+    .select('userId')
+    .lean<{ userId: string } | null>();
+
+  if (!defaultOwner) {
+    console.warn(`[warn] Default owner "${DEFAULT_OWNER_EMAIL}" not found — servers will have no owner membership.`);
+  } else {
+    console.log(`[ok] Default owner resolved: ${DEFAULT_OWNER_EMAIL}`);
+  }
 
   let inserted = 0;
 
   for (const society of societies) {
     const slug = slugify(society.name, { lower: true, strict: true });
 
-    await ServerModel.create({
+    const server = await ServerModel.create({
       name: society.name,
       slug,
       type: 'citysocieties',
@@ -61,6 +82,16 @@ async function main() {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
+
+    if (defaultOwner) {
+      await Membership.create({
+        serverId: server._id,
+        userId: defaultOwner.userId,
+        roles: ['owner'],
+        status: 'active',
+        joinedAt: new Date(),
+      });
+    }
 
     console.log(`[ok] seeded: ${society.name} (${society.category})`);
     inserted += 1;

@@ -94,4 +94,13 @@ export class CreateNotificationDto {
   @IsOptional()
   @IsISO8601()
   expiresAt?: string;
+
+  @ApiProperty({
+    description:
+      'Globally-unique dedupe key; duplicate creates with the same key are silently dropped',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  dedupeKey?: string;
 }

@@ -243,6 +243,296 @@
         ]
       }
     },
+    "/servers/{serverId}/owners": {
+      "post": {
+        "operationId": "ServerController_addOwner",
+        "parameters": [
+          {
+            "name": "serverId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddOwnerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Owner added successfully"
+          },
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Add an owner to a server by email",
+        "tags": [
+          "servers"
+        ]
+      }
+    },
+    "/servers/{serverId}/owners/{userId}": {
+      "delete": {
+        "operationId": "ServerController_removeOwner",
+        "parameters": [
+          {
+            "name": "serverId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner removed successfully"
+          }
+        },
+        "summary": "Remove an owner from a server",
+        "tags": [
+          "servers"
+        ]
+      }
+    },
+    "/servers/{serverId}/me": {
+      "get": {
+        "operationId": "ServerController_myRoles",
+        "parameters": [
+          {
+            "name": "serverId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns the roles array for the current user in this server",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "roles": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "roles"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current user membership roles for a server",
+        "tags": [
+          "servers"
+        ]
+      }
+    },
+    "/notifications": {
+      "post": {
+        "operationId": "NotificationContoller_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateNotificationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationViewDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Creates notificaion in the database for the specified user",
+        "tags": [
+          "NotificationContoller"
+        ]
+      }
+    },
+    "/notifications/unread": {
+      "get": {
+        "operationId": "NotificationContoller_listUnread",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationViewDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List unread notifications for the current user",
+        "tags": [
+          "NotificationContoller"
+        ]
+      }
+    },
+    "/notifications/{notificationId}/read": {
+      "patch": {
+        "operationId": "NotificationContoller_markRead",
+        "parameters": [
+          {
+            "name": "notificationId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationViewDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Mark a notification as read",
+        "tags": [
+          "NotificationContoller"
+        ]
+      }
+    },
+    "/notifications/preferences/channels/{channelId}": {
+      "get": {
+        "operationId": "NotificationContoller_getChannelPreference",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferenceViewDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get the current user's notification preference for a channel",
+        "tags": [
+          "NotificationContoller"
+        ]
+      },
+      "put": {
+        "operationId": "NotificationContoller_setChannelPreference",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotificationPreferenceDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPreferenceViewDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Update the current user's notification preference for a channel",
+        "tags": [
+          "NotificationContoller"
+        ]
+      }
+    },
+    "/notifications/stream": {
+      "get": {
+        "operationId": "NotificationContoller_stream",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "NotificationContoller"
+        ]
+      }
+    },
     "/servers/{serverId}/channels": {
       "post": {
         "operationId": "ChannelsController_create",
@@ -334,6 +624,35 @@
                 }
               }
             }
+          }
+        },
+        "tags": [
+          "Channels"
+        ]
+      },
+      "delete": {
+        "operationId": "ChannelsController_deleteChannel",
+        "parameters": [
+          {
+            "name": "channelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "serverId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletes a channel and all its access records"
           }
         },
         "tags": [
@@ -494,115 +813,6 @@
         "summary": "List messages in the channel",
         "tags": [
           "messages"
-        ]
-      }
-    },
-    "/notifications": {
-      "post": {
-        "operationId": "NotificationContoller_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateNotificationDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotificationViewDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Creates notificaion in the database for the specified user",
-        "tags": [
-          "NotificationContoller"
-        ]
-      }
-    },
-    "/notifications/unread": {
-      "get": {
-        "operationId": "NotificationContoller_listUnread",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/NotificationViewDto"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "List unread notifications for the current user",
-        "tags": [
-          "NotificationContoller"
-        ]
-      }
-    },
-    "/notifications/{notificationId}/read": {
-      "patch": {
-        "operationId": "NotificationContoller_markRead",
-        "parameters": [
-          {
-            "name": "notificationId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/NotificationViewDto"
-                }
-              }
-            }
-          }
-        },
-        "summary": "Mark a notification as read",
-        "tags": [
-          "NotificationContoller"
-        ]
-      }
-    },
-    "/notifications/stream": {
-      "get": {
-        "operationId": "NotificationContoller_stream",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            }
-          }
-        },
-        "tags": [
-          "NotificationContoller"
         ]
       }
     },
@@ -5348,6 +5558,16 @@
           "degreeModuleId"
         ]
       },
+      "SocietyCategory": {
+        "type": "string",
+        "enum": [
+          "Sports & Fitness",
+          "Academic & Professional",
+          "Arts & Culture",
+          "Community & Lifestyle"
+        ],
+        "description": "Category label — used to group citysocieties servers"
+      },
       "ServerViewDto": {
         "type": "object",
         "properties": {
@@ -5383,6 +5603,14 @@
           },
           "icon": {
             "type": "string"
+          },
+          "category": {
+            "description": "Category label — used to group citysocieties servers",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SocietyCategory"
+              }
+            ]
           },
           "createdAt": {
             "type": "string"
@@ -5463,6 +5691,229 @@
             "description": "Associated degree-module identifier"
           }
         }
+      },
+      "AddOwnerDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "student@city.ac.uk"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "CreateNotificationDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "description": "Recipient BetterAuth user id",
+            "example": "usr_01hxt8zshm8yc6a5n8s6k1qj3r"
+          },
+          "channelId": {
+            "type": "string",
+            "description": "Channel identifier (if applicable)"
+          },
+          "serverId": {
+            "type": "string",
+            "description": "Server identifier (if applicable)"
+          },
+          "serverName": {
+            "type": "string",
+            "description": "Server name (if applicable)"
+          },
+          "type": {
+            "type": "string",
+            "description": "Notification type",
+            "example": "message.mention",
+            "enum": [
+              "message.create",
+              "message.mention",
+              "channel.invite",
+              "membership.status",
+              "generic"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Primary title for display",
+            "example": "New mention in #freshers"
+          },
+          "body": {
+            "type": "string",
+            "description": "Optional body or preview text",
+            "example": "Alice mentioned you in #freshers"
+          },
+          "actorId": {
+            "type": "string",
+            "description": "Actor user id triggering the notification",
+            "example": "usr_01hxt8zshm8yc6a5n8s6k1qabc"
+          },
+          "data": {
+            "type": "object",
+            "description": "Structured context payload (server/channel/message ids)"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiry timestamp; notification auto-deletes afterwards",
+            "example": "2024-05-20T00:00:00.000Z"
+          },
+          "dedupeKey": {
+            "type": "string",
+            "description": "Globally-unique dedupe key; duplicate creates with the same key are silently dropped"
+          }
+        },
+        "required": [
+          "userId",
+          "type",
+          "title"
+        ]
+      },
+      "NotificationViewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Notification identifier",
+            "example": "ntf_01hyf4a12x3n8zg9c0p7"
+          },
+          "userId": {
+            "type": "string",
+            "description": "Recipient user id",
+            "example": "usr_01hxt8zshm8yc6a5n8s6k1qj3r"
+          },
+          "actorId": {
+            "type": "string",
+            "description": "Actor user id if applicable",
+            "example": "usr_01hxt8zshm8yc6a5n8s6k1qabc"
+          },
+          "serverId": {
+            "type": "string",
+            "description": "Server identifier associated with this notification",
+            "example": "srv_01hxt8zshm8yc6a5n8s6k1qz9x"
+          },
+          "serverName": {
+            "type": "string",
+            "description": "Server name for display",
+            "example": "Physics 101"
+          },
+          "channelId": {
+            "type": "string",
+            "description": "Channel identifier if the notification targets a channel",
+            "example": "chn_01hxt8zshm8yc6a5n8s6k1qy1m"
+          },
+          "type": {
+            "type": "string",
+            "description": "Notification type discriminator",
+            "example": "message.mention",
+            "enum": [
+              "message.create",
+              "message.mention",
+              "channel.invite",
+              "membership.status",
+              "generic"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "Display title",
+            "example": "New mention in #freshers"
+          },
+          "body": {
+            "type": "string",
+            "description": "Optional body/preview",
+            "example": "Alice mentioned you in #freshers"
+          },
+          "status": {
+            "type": "string",
+            "description": "Current status",
+            "enum": [
+              "unread",
+              "read"
+            ],
+            "example": "unread"
+          },
+          "data": {
+            "type": "object"
+          },
+          "createdAt": {
+            "type": "string",
+            "description": "Creation timestamp",
+            "example": "2024-05-16T09:15:30.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "Last update timestamp",
+            "example": "2024-05-16T09:15:30.000Z"
+          },
+          "readAt": {
+            "type": "string",
+            "description": "Read timestamp if set",
+            "example": "2024-05-16T10:00:00.000Z"
+          },
+          "seenAt": {
+            "type": "string",
+            "description": "Seen timestamp for badge counts",
+            "example": "2024-05-16T10:05:00.000Z"
+          },
+          "expiresAt": {
+            "type": "string",
+            "description": "Expiry timestamp (auto-clean via TTL)",
+            "example": "2024-05-20T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "userId",
+          "type",
+          "title",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "NotificationPreferenceViewDto": {
+        "type": "object",
+        "properties": {
+          "channelId": {
+            "type": "string",
+            "description": "Target channel id"
+          },
+          "level": {
+            "type": "string",
+            "description": "Notification level for this channel",
+            "enum": [
+              "all",
+              "mentions",
+              "none"
+            ]
+          }
+        },
+        "required": [
+          "channelId",
+          "level"
+        ]
+      },
+      "UpdateNotificationPreferenceDto": {
+        "type": "object",
+        "properties": {
+          "level": {
+            "type": "string",
+            "description": "Notification level for this channel",
+            "enum": [
+              "all",
+              "mentions",
+              "none"
+            ],
+            "example": "all"
+          }
+        },
+        "required": [
+          "level"
+        ]
       },
       "CreateChannelDto": {
         "type": "object",
@@ -5798,172 +6249,6 @@
           "page",
           "pageSize",
           "hasMore"
-        ]
-      },
-      "CreateNotificationDto": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "description": "Recipient BetterAuth user id",
-            "example": "usr_01hxt8zshm8yc6a5n8s6k1qj3r"
-          },
-          "channelId": {
-            "type": "string",
-            "description": "Channel identifier (if applicable)"
-          },
-          "serverId": {
-            "type": "string",
-            "description": "Server identifier (if applicable)"
-          },
-          "serverName": {
-            "type": "string",
-            "description": "Server name (if applicable)"
-          },
-          "type": {
-            "type": "string",
-            "description": "Notification type",
-            "example": "message.mention",
-            "enum": [
-              "message.create",
-              "message.mention",
-              "channel.invite",
-              "membership.status",
-              "generic"
-            ]
-          },
-          "title": {
-            "type": "string",
-            "description": "Primary title for display",
-            "example": "New mention in #freshers"
-          },
-          "body": {
-            "type": "string",
-            "description": "Optional body or preview text",
-            "example": "Alice mentioned you in #freshers"
-          },
-          "actorId": {
-            "type": "string",
-            "description": "Actor user id triggering the notification",
-            "example": "usr_01hxt8zshm8yc6a5n8s6k1qabc"
-          },
-          "data": {
-            "type": "object",
-            "description": "Structured context payload (server/channel/message ids)"
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiry timestamp; notification auto-deletes afterwards",
-            "example": "2024-05-20T00:00:00.000Z"
-          }
-        },
-        "required": [
-          "userId",
-          "type",
-          "title"
-        ]
-      },
-      "NotificationViewDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Notification identifier",
-            "example": "ntf_01hyf4a12x3n8zg9c0p7"
-          },
-          "userId": {
-            "type": "string",
-            "description": "Recipient user id",
-            "example": "usr_01hxt8zshm8yc6a5n8s6k1qj3r"
-          },
-          "actorId": {
-            "type": "string",
-            "description": "Actor user id if applicable",
-            "example": "usr_01hxt8zshm8yc6a5n8s6k1qabc"
-          },
-          "serverId": {
-            "type": "string",
-            "description": "Server identifier associated with this notification",
-            "example": "srv_01hxt8zshm8yc6a5n8s6k1qz9x"
-          },
-          "serverName": {
-            "type": "string",
-            "description": "Server name for display",
-            "example": "Physics 101"
-          },
-          "channelId": {
-            "type": "string",
-            "description": "Channel identifier if the notification targets a channel",
-            "example": "chn_01hxt8zshm8yc6a5n8s6k1qy1m"
-          },
-          "type": {
-            "type": "string",
-            "description": "Notification type discriminator",
-            "example": "message.mention",
-            "enum": [
-              "message.create",
-              "message.mention",
-              "channel.invite",
-              "membership.status",
-              "generic"
-            ]
-          },
-          "title": {
-            "type": "string",
-            "description": "Display title",
-            "example": "New mention in #freshers"
-          },
-          "body": {
-            "type": "string",
-            "description": "Optional body/preview",
-            "example": "Alice mentioned you in #freshers"
-          },
-          "status": {
-            "type": "string",
-            "description": "Current status",
-            "enum": [
-              "unread",
-              "read"
-            ],
-            "example": "unread"
-          },
-          "data": {
-            "type": "object"
-          },
-          "createdAt": {
-            "type": "string",
-            "description": "Creation timestamp",
-            "example": "2024-05-16T09:15:30.000Z"
-          },
-          "updatedAt": {
-            "type": "string",
-            "description": "Last update timestamp",
-            "example": "2024-05-16T09:15:30.000Z"
-          },
-          "readAt": {
-            "type": "string",
-            "description": "Read timestamp if set",
-            "example": "2024-05-16T10:00:00.000Z"
-          },
-          "seenAt": {
-            "type": "string",
-            "description": "Seen timestamp for badge counts",
-            "example": "2024-05-16T10:05:00.000Z"
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "Expiry timestamp (auto-clean via TTL)",
-            "example": "2024-05-20T00:00:00.000Z"
-          }
-        },
-        "required": [
-          "id",
-          "userId",
-          "type",
-          "title",
-          "status",
-          "createdAt",
-          "updatedAt"
         ]
       },
       "DegreeViewDto": {

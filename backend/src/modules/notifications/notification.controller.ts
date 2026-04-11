@@ -1,9 +1,14 @@
-import { Body, Controller, Get, Param, Patch, Post, Sse, UseGuards, Logger, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Put, Sse, UseGuards, Logger, NotFoundException } from '@nestjs/common';
 import { AuthGuard, Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { NotificationService } from './notification.service';
-import { ApiCreatedResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { NotificationPreferenceService } from './notification-preference.service';
+import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationViewDto } from './dto/notification-view.dto';
+import {
+  NotificationPreferenceViewDto,
+  UpdateNotificationPreferenceDto,
+} from './dto/notification-preference.dto';
 import type { MessageEvent, Request } from '@nestjs/common';
 import { Req } from '@nestjs/common';
 import type { Observable } from 'rxjs';
@@ -14,7 +19,10 @@ import { filter, map } from 'rxjs';
 export class NotificationContoller {
   private readonly logger = new Logger(NotificationContoller.name);
 
-  constructor(private readonly notifications: NotificationService) {}
+  constructor(
+    private readonly notifications: NotificationService,
+    private readonly preferences: NotificationPreferenceService,
+  ) {}
 
   @Post()
   @ApiOperation({
@@ -56,6 +64,33 @@ export class NotificationContoller {
       throw new NotFoundException('Notification not found');
     }
     return updated;
+  }
+
+  @Get('preferences/channels/:channelId')
+  @ApiOperation({
+    summary: "Get the current user's notification preference for a channel",
+  })
+  @ApiParam({ name: 'channelId', type: String })
+  @ApiOkResponse({ type: NotificationPreferenceViewDto })
+  async getChannelPreference(
+    @Session() session: UserSession,
+    @Param('channelId') channelId: string,
+  ): Promise<NotificationPreferenceViewDto> {
+    return this.preferences.get(session.user.id, channelId);
+  }
+
+  @Put('preferences/channels/:channelId')
+  @ApiOperation({
+    summary: "Update the current user's notification preference for a channel",
+  })
+  @ApiParam({ name: 'channelId', type: String })
+  @ApiOkResponse({ type: NotificationPreferenceViewDto })
+  async setChannelPreference(
+    @Session() session: UserSession,
+    @Param('channelId') channelId: string,
+    @Body() dto: UpdateNotificationPreferenceDto,
+  ): Promise<NotificationPreferenceViewDto> {
+    return this.preferences.set(session.user.id, channelId, dto.level);
   }
 
   @Sse('stream')

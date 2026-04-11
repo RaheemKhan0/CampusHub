@@ -1,6 +1,15 @@
 "use client";
 
-import { Bell, Loader2, RefreshCw } from "lucide-react";
+import {
+  AtSign,
+  Bell,
+  Hash,
+  Loader2,
+  MessageSquare,
+  RefreshCw,
+  ShieldCheck,
+  UserPlus,
+} from "lucide-react";
 import { useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,6 +27,29 @@ import { markNotificationRead } from "@/lib/notifications/actions";
 import { queryKeys } from "@/lib/query-keys";
 
 type NotificationView = components["schemas"]["NotificationViewDto"];
+type NotificationType = NotificationView["type"];
+
+function getChannelNameFromData(notification: NotificationView): string | null {
+  const data = notification.data;
+  if (!data || typeof data !== "object") return null;
+  const raw = (data as Record<string, unknown>).channelName;
+  return typeof raw === "string" && raw.length > 0 ? raw : null;
+}
+
+function iconForType(type?: NotificationType) {
+  switch (type) {
+    case "message.mention":
+      return AtSign;
+    case "message.create":
+      return MessageSquare;
+    case "channel.invite":
+      return UserPlus;
+    case "membership.status":
+      return ShieldCheck;
+    default:
+      return Bell;
+  }
+}
 
 export function NotificationBell() {
   const queryClient = useQueryClient();
@@ -45,6 +77,8 @@ export function NotificationBell() {
         router.push(
           `/dashboard/server/${notification.serverId}/channel/${notification.channelId}`,
         );
+      } else if (notification.serverId) {
+        router.push(`/dashboard/server/${notification.serverId}`);
       }
     },
     [queryClient, router],
@@ -128,12 +162,19 @@ type NotificationItemProps = {
 };
 
 function NotificationItem({ notification, onNavigate }: NotificationItemProps) {
-  const isNavigable = Boolean(notification.serverId && notification.channelId);
+  // Channel-bound notifications navigate to the channel; server-level ones
+  // (membership.status) navigate to the server home if we have a serverId.
+  const isNavigable = Boolean(
+    notification.serverId && (notification.channelId || notification.type === "membership.status"),
+  );
   const handleClick = () => {
     if (isNavigable) {
       onNavigate?.();
     }
   };
+
+  const Icon = iconForType(notification.type);
+  const channelName = getChannelNameFromData(notification);
 
   return (
     <li
@@ -143,22 +184,40 @@ function NotificationItem({ notification, onNavigate }: NotificationItemProps) {
       )}
       onClick={handleClick}
     >
-      <p className="font-semibold text-foreground">
-        {notification.serverName ?? notification.title}
-      </p>
-      {notification.channelId ? (
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
-          #{notification.channelId}
-        </p>
-      ) : null}
-      {notification.body ? (
-        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-          {notification.body}
-        </p>
-      ) : null}
-      <p className="mt-1 text-[0.65rem] text-muted-foreground">
-        {formatTimestamp(notification.createdAt)}
-      </p>
+      <div className="flex items-start gap-3">
+        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <Icon className="h-3.5 w-3.5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 font-semibold text-foreground">
+            {notification.title ?? notification.serverName ?? "Notification"}
+          </p>
+          {(channelName || notification.serverName) && (
+            <p className="mt-0.5 flex items-center gap-1 text-[0.7rem] text-muted-foreground">
+              {channelName ? (
+                <>
+                  <Hash className="h-3 w-3" />
+                  <span className="truncate">{channelName}</span>
+                </>
+              ) : null}
+              {channelName && notification.serverName ? (
+                <span className="text-muted-foreground/60">·</span>
+              ) : null}
+              {notification.serverName ? (
+                <span className="truncate">{notification.serverName}</span>
+              ) : null}
+            </p>
+          )}
+          {notification.body ? (
+            <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+              {notification.body}
+            </p>
+          ) : null}
+          <p className="mt-1 text-[0.65rem] text-muted-foreground">
+            {formatTimestamp(notification.createdAt)}
+          </p>
+        </div>
+      </div>
     </li>
   );
 }

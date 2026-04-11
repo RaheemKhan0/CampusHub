@@ -17,6 +17,7 @@ import { Server, Socket } from 'socket.io';
 import { Types } from 'mongoose';
 
 import { MessagesService } from './messages.service';
+import { ChannelPresenceService } from './channel-presence.service';
 import { WsAuthGuard } from 'src/lib/guards/WsAuthGuard';
 import { ChannelTargetDto } from './dto/channel-target.dto';
 import { SendMessageDto } from './dto/send-message.dto';
@@ -67,7 +68,10 @@ type GatewaySocket = Socket & { data?: { user?: GatewayUser } };
 export class MessagesGateway {
   private readonly logger = new Logger(MessagesGateway.name);
 
-  constructor(private readonly messagesService: MessagesService) {}
+  constructor(
+    private readonly messagesService: MessagesService,
+    private readonly presence: ChannelPresenceService,
+  ) {}
 
   @WebSocketServer()
   server!: Server;
@@ -78,6 +82,7 @@ export class MessagesGateway {
 
   handleDisconnect(client: GatewaySocket) {
     this.logger.debug(`Socket ${client.id} disconnected`);
+    this.presence.disconnect(client.id);
   }
 
   @SubscribeMessage('channel:join')
@@ -97,6 +102,7 @@ export class MessagesGateway {
 
     const room = channelRoom(String(channel._id));
     await client.join(room);
+    this.presence.join(client.id, user.id, String(channel._id));
 
     client.emit('channel:joined', {
       serverId: payload.serverId,
@@ -120,6 +126,7 @@ export class MessagesGateway {
     );
     const room = channelRoom(String(payload.channelId));
     await client.leave(room);
+    this.presence.leave(client.id, String(payload.channelId));
     client.emit('channel:left', {
       serverId: payload.serverId,
       channelId: payload.channelId,

@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { authClient } from "@/lib/auth-client";
 import { ChannelMessage } from "@/types/messages";
+import { ChannelNotificationSettings } from "@/components/notifications/channel-notification-settings";
 
 // Consistent per-author avatar colour derived from their id/name
 const AVATAR_PALETTE = [
@@ -33,6 +34,7 @@ function avatarColor(str: string): string {
 }
 
 type MessagePanelProps = {
+  channelId?: string;
   channelName: string;
   channelTopic?: string;
   messages: ChannelMessage[];
@@ -44,6 +46,7 @@ type MessagePanelProps = {
 };
 
 export function MessagePanel({
+  channelId,
   channelName,
   channelTopic,
   messages,
@@ -98,7 +101,11 @@ export function MessagePanel({
     >
       {/* Channel header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm">
-        <Header channelName={channelName} channelTopic={channelTopic} />
+        <Header
+          channelId={channelId}
+          channelName={channelName}
+          channelTopic={channelTopic}
+        />
         <Separator />
       </div>
 
@@ -147,11 +154,12 @@ export function MessagePanel({
 // ─── Header ─────────────────────────────────────────────────────────────────
 
 type HeaderProps = {
+  channelId?: string;
   channelName: string;
   channelTopic?: string;
 };
 
-function Header({ channelName, channelTopic }: HeaderProps) {
+function Header({ channelId, channelName, channelTopic }: HeaderProps) {
   return (
     <header className="flex items-center justify-between gap-4 px-5 py-3">
       <div className="flex min-w-0 items-center gap-3">
@@ -167,10 +175,13 @@ function Header({ channelName, channelTopic }: HeaderProps) {
           </p>
         </div>
       </div>
-      <Button variant="outline" size="sm" className="shrink-0 gap-1.5 text-xs">
-        <MessageSquarePlus className="h-3.5 w-3.5" />
-        New thread
-      </Button>
+      <div className="flex shrink-0 items-center gap-2">
+        <ChannelNotificationSettings channelId={channelId} />
+        <Button variant="outline" size="sm" className="shrink-0 gap-1.5 text-xs">
+          <MessageSquarePlus className="h-3.5 w-3.5" />
+          New thread
+        </Button>
+      </div>
     </header>
   );
 }

@@ -1,9 +1,11 @@
 import {
   Injectable,
+  Logger,
   ConflictException,
   ForbiddenException,
   NotFoundException,
   BadRequestException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { type FilterQuery, Types } from 'mongoose';
 import slugify from 'slugify';
@@ -20,6 +22,12 @@ import { Membership } from 'src/database/schemas/membership.schema';
 import type { IUser } from 'src/database/schemas/user.schema';
 import { AppUser } from 'src/database/schemas/user.schema';
 import { DegreeModule } from 'src/database/schemas/degree-module.schema';
+import type { IDegree } from 'src/database/schemas/degree.schema';
+import { Degree } from 'src/database/schemas/degree.schema';
+import { NotificationService } from '../notifications/notification.service';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MEMBERSHIP_STATUS_TTL_MS = 90 * DAY_MS;
 
 type MembershipRoles = Pick<IMembership, 'roles'>;
 
@@ -27,6 +35,9 @@ type UserSuperFlag = Pick<IUser, 'isSuper'>;
 
 @Injectable()
 export class ServerService {
+  private readonly logger = new Logger(ServerService.name);
+
+  constructor(private readonly notifications: NotificationService) {}
   async create(
     ownerId: string | null,
     dto: CreateServerDto,
@@ -94,27 +105,36 @@ export class ServerService {
   }
 
   async findById(serverId: string, actorId: string): Promise<ServerViewDto> {
-    const user = await AppUser.findOne({ userId: actorId })
-      .select('isSuper')
-      .lean<UserSuperFlag | null>();
-    const isSuper = user?.isSuper ?? false;
+    const server = await ServerModel.findById(serverId).lean<IServer | null>();
+    if (!server) throw new NotFoundException('Server not found');
+
+    const appUser = await AppUser.findOne({ userId: actorId })
+      .select('isSuper degreeSlug')
+      .lean<Pick<IUser, 'isSuper' | 'degreeSlug'> | null>();
+    const isSuper = appUser?.isSuper ?? false;
 
     if (!isSuper) {
-      const membership = await Membership.findOne({
-        serverId,
-        userId: actorId,
-      })
-        .select('_id')
-        .lean<Pick<IMembership, '_id'> | null>();
+      if (server.type === 'unimodules') {
+        // Allow access based on degree match — no membership record needed
+        const degree = await Degree.findOne({ slug: appUser?.degreeSlug })
+          .select('_id')
+          .lean<Pick<IDegree, '_id'> | null>();
 
-      if (!membership) {
-        throw new ForbiddenException('Not allowed to access this server');
+        if (!degree || String(server.degreeId) !== String(degree._id)) {
+          throw new ForbiddenException('This server is not part of your degree');
+        }
+      } else if (server.type !== 'citysocieties') {
+        // All other types (not unimodules, not societies) require active membership
+        const membership = await Membership.findOne({
+          serverId,
+          userId: actorId,
+          status: 'active',
+        })
+          .select('_id')
+          .lean<Pick<IMembership, '_id'> | null>();
+
+        if (!membership) throw new ForbiddenException('Not allowed to access this server');
       }
-    }
-
-    const server = await ServerModel.findById(serverId).lean<IServer | null>();
-    if (!server) {
-      throw new NotFoundException('Server not found');
     }
 
     const moduleYear = await this.getDegreeModuleYear(server.degreeModuleId);
@@ -122,16 +142,21 @@ export class ServerService {
   }
 
   async remove(serverId: string, actorId: string) {
-    const isSuper = true;
+    const user = await AppUser.findOne({ userId: actorId })
+      .select('isSuper')
+      .lean<UserSuperFlag | null>();
+    const isSuper = user?.isSuper ?? false;
+
     if (!isSuper) {
       const membership = await Membership.findOne({ serverId, userId: actorId })
         .select('roles')
         .lean<MembershipRoles | null>();
       const roles = membership?.roles ?? [];
-      if (!roles.some((role) => role === 'owner' || role === 'admin')) {
-        throw new ForbiddenException('Not allowed to delete this server');
+      if (!roles.some((role) => role === 'owner')) {
+        throw new ForbiddenException('Only owners can delete a server');
       }
     }
+
     await ServerModel.findByIdAndDelete(serverId).exec();
     await Membership.deleteMany({ serverId }).exec();
     return { ok: true } as const;
@@ -311,5 +336,127 @@ export class ServerService {
       map.set(String(mod._id), mod.year);
     });
     return map;
+  }
+
+  async myRoles(serverId: string, userId: string): Promise<{ roles: string[] }> {
+    const membership = await Membership.findOne({ serverId, userId, status: 'active' })
+      .select('roles')
+      .lean<Pick<IMembership, 'roles'> | null>();
+    return { roles: membership?.roles ?? [] };
+  }
+
+  async addOwner(serverId: string, email: string): Promise<{ ok: true }> {
+    const server = await ServerModel.findById(serverId).lean<IServer | null>();
+    if (!server) throw new NotFoundException('Server not found');
+
+    const user = await AppUser.findOne({ email: email.toLowerCase() })
+      .select('userId')
+      .lean<Pick<IUser, 'userId'> | null>();
+    if (!user) throw new NotFoundException(`No user found with email ${email}`);
+
+    const existing = await Membership.findOne({
+      serverId,
+      userId: user.userId,
+    }).lean<Pick<IMembership, 'roles'> | null>();
+
+    if (existing) {
+      if (existing.roles.includes('owner')) {
+        throw new UnprocessableEntityException('User is already an owner of this server');
+      }
+      await Membership.updateOne(
+        { serverId, userId: user.userId },
+        { $addToSet: { roles: 'owner' } },
+      );
+    } else {
+      await Membership.create({
+        serverId,
+        userId: user.userId,
+        roles: ['owner'],
+        status: 'active',
+        joinedAt: new Date(),
+      });
+    }
+
+    await this.deliverMembershipStatusNotification({
+      userId: user.userId,
+      serverId,
+      serverName: server.name,
+      title: `You were added as an owner of ${server.name}`,
+      change: 'owner.added',
+    });
+
+    return { ok: true };
+  }
+
+  async removeOwner(serverId: string, targetUserId: string, actorId: string): Promise<{ ok: true }> {
+    const server = await ServerModel.findById(serverId).lean<IServer | null>();
+    if (!server) throw new NotFoundException('Server not found');
+
+    // Prevent removing the last owner
+    const ownerCount = await Membership.countDocuments({
+      serverId,
+      roles: 'owner',
+      status: 'active',
+    });
+    if (ownerCount <= 1) {
+      throw new UnprocessableEntityException('Cannot remove the last owner of a server');
+    }
+
+    const membership = await Membership.findOne({ serverId, userId: targetUserId }).lean<Pick<IMembership, 'roles'> | null>();
+    if (!membership || !membership.roles.includes('owner')) {
+      throw new NotFoundException('User is not an owner of this server');
+    }
+
+    await Membership.updateOne(
+      { serverId, userId: targetUserId },
+      { $pull: { roles: 'owner' } },
+    );
+
+    await this.deliverMembershipStatusNotification({
+      userId: targetUserId,
+      actorId,
+      serverId,
+      serverName: server.name,
+      title: `Your owner role was removed in ${server.name}`,
+      change: 'owner.removed',
+    });
+
+    return { ok: true };
+  }
+
+  private async deliverMembershipStatusNotification(args: {
+    userId: string;
+    actorId?: string;
+    serverId: string;
+    serverName: string;
+    title: string;
+    body?: string;
+    change: string;
+  }): Promise<void> {
+    if (args.actorId && args.actorId === args.userId) return;
+    try {
+      await this.notifications.createNotification({
+        userId: args.userId,
+        actorId: args.actorId,
+        serverId: args.serverId,
+        serverName: args.serverName,
+        type: 'membership.status',
+        title: args.title,
+        body: args.body,
+        data: { change: args.change },
+        // No dedupeKey: repeated role churn (add → remove → add) produces
+        // legitimately distinct events. Membership changes are rare enough
+        // that accidental-retry protection isn't worth losing that.
+        expiresAt: new Date(
+          Date.now() + MEMBERSHIP_STATUS_TTL_MS,
+        ).toISOString(),
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Failed to create membership status notification for user ${args.userId}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
   }
 }

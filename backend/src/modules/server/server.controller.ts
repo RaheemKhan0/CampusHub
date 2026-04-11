@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Patch,
   Post,
@@ -24,6 +25,7 @@ import {
 import { ServerViewDto } from './dto/server-view.dto';
 import { ListServersQueryDto } from './dto/list-server.query.dto';
 import { ServerListResponseDto } from './dto/server-list.dto';
+import { AddOwnerDto } from './dto/add-owner.dto';
 import { DegreeSlugPipe } from 'src/lib/pipes/DegreeSlugPipe';
 
 @ApiTags('servers')
@@ -95,5 +97,53 @@ export class ServerController {
   ) {
     const server = await this.servers.update(serverId, session.user.id, dto);
     return server;
+  }
+
+  @Post(':serverId/owners')
+  @ApiOperation({ summary: 'Add an owner to a server by email' })
+  @ApiParam({ name: 'serverId', type: String })
+  @ApiOkResponse({ description: 'Owner added successfully' })
+  @UseGuards(ServerRolesGuard)
+  @ServerRole('owner')
+  async addOwner(
+    @Param('serverId') serverId: string,
+    @Body() dto: AddOwnerDto,
+  ) {
+    return this.servers.addOwner(serverId, dto.email);
+  }
+
+  @Delete(':serverId/owners/:userId')
+  @ApiOperation({ summary: 'Remove an owner from a server' })
+  @ApiParam({ name: 'serverId', type: String })
+  @ApiParam({ name: 'userId', type: String })
+  @ApiOkResponse({ description: 'Owner removed successfully' })
+  @UseGuards(ServerRolesGuard)
+  @ServerRole('owner')
+  async removeOwner(
+    @Session() session: UserSession,
+    @Param('serverId') serverId: string,
+    @Param('userId') userId: string,
+  ) {
+    return this.servers.removeOwner(serverId, userId, session.user.id);
+  }
+
+  @Get(':serverId/me')
+  @ApiOperation({ summary: 'Get the current user membership roles for a server' })
+  @ApiParam({ name: 'serverId', type: String })
+  @ApiOkResponse({
+    description: 'Returns the roles array for the current user in this server',
+    schema: {
+      type: 'object',
+      properties: {
+        roles: { type: 'array', items: { type: 'string' } },
+      },
+      required: ['roles'],
+    },
+  })
+  async myRoles(
+    @Session() session: UserSession,
+    @Param('serverId') serverId: string,
+  ) {
+    return this.servers.myRoles(serverId, session.user.id);
   }
 }

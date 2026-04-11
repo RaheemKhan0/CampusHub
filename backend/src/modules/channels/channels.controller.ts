@@ -9,11 +9,13 @@ import {
   Get,
 } from '@nestjs/common';
 import { ChannelManageGuard } from 'src/lib/guards/channel-manage-guard';
+import { ServerMemberGuard } from 'src/lib/guards/server-member.guard';
+import { ChannelAccessGuard } from 'src/lib/guards/channel-access-guard';
 import { ChannelsService } from './channels.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelListResponseDto } from './dto/channel-list.dto';
 import { Session, type UserSession } from '@thallesp/nestjs-better-auth';
-import { ApiOkResponse, ApiCreatedResponse } from '@nestjs/swagger';
+import { ApiOkResponse, ApiCreatedResponse, ApiParam } from '@nestjs/swagger';
 import { ChannelViewDto } from './dto/channel-view.dto';
 
 @Controller('servers/:serverId/channels')
@@ -22,11 +24,16 @@ export class ChannelsController {
 
   @Post()
   @UseGuards(ChannelManageGuard)
-  create(@Param('serverId') serverId: string, @Body() dto: CreateChannelDto) {
-    return this.channels.create(serverId, dto);
+  create(
+    @Param('serverId') serverId: string,
+    @Body() dto: CreateChannelDto,
+    @Session() session: UserSession,
+  ) {
+    return this.channels.create(serverId, dto, session.user.id);
   }
 
   @Get()
+  @UseGuards(ServerMemberGuard)
   @ApiOkResponse({
     type: ChannelListResponseDto,
     description: 'returns a channel list visible to the user',
@@ -35,10 +42,11 @@ export class ChannelsController {
     @Param('serverId') serverId: string,
     @Session() session: UserSession,
   ): Promise<ChannelListResponseDto> {
-    return this.channels.listVisible(session.user.id, serverId);
+    return this.channels.list(session.user.id, serverId);
   }
 
   @Get(':channelId')
+  @UseGuards(ChannelAccessGuard)
   @ApiOkResponse({
     type: ChannelViewDto,
     description: 'returns the desired channel',
@@ -56,9 +64,19 @@ export class ChannelsController {
   addMembers(
     @Param('channelId') channelId: string,
     @Body() body: { userId: string },
+    @Session() session: UserSession,
   ) {
     const ids = body.userId;
-    return this.channels.addMember(channelId, ids);
+    return this.channels.addMember(channelId, ids, session.user.id);
+  }
+
+  @Delete(':channelId')
+  @UseGuards(ChannelManageGuard)
+  @ApiParam({ name: 'serverId', type: String })
+  @ApiParam({ name: 'channelId', type: String })
+  @ApiOkResponse({ description: 'Deletes a channel and all its access records' })
+  deleteChannel(@Param('channelId') channelId: string) {
+    return this.channels.deleteChannel(channelId);
   }
 
   @Delete(':channelId/members/:userId')
