@@ -115,8 +115,8 @@ export class ServerService {
         if (!degree || String(server.degreeId) !== String(degree._id)) {
           throw new ForbiddenException('This server is not part of your degree');
         }
-      } else {
-        // Society servers and all other types require an active membership
+      } else if (server.type !== 'citysocieties') {
+        // All other types (not unimodules, not societies) require active membership
         const membership = await Membership.findOne({
           serverId,
           userId: actorId,
