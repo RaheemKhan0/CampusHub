@@ -189,6 +189,10 @@ export default function ChannelPage() {
   }
 
   if (isError || !channelQuery.data) {
+    const rawError = channelQuery.error ?? messagesQuery.error;
+    const statusCode = (rawError as unknown as { statusCode?: number })?.statusCode;
+    const isForbidden = statusCode === 403;
+
     return (
       <ErrorState
         message={
@@ -196,10 +200,15 @@ export default function ChannelPage() {
           messagesQuery.error?.message ??
           "We couldn't load this channel."
         }
-        onRetry={() => {
-          void channelQuery.refetch();
-          void messagesQuery.refetch();
-        }}
+        isForbidden={isForbidden}
+        onRetry={
+          isForbidden
+            ? undefined
+            : () => {
+                void channelQuery.refetch();
+                void messagesQuery.refetch();
+              }
+        }
         isLoading={messagesQuery.isFetching || channelQuery.isFetching}
       />
     );
@@ -223,11 +232,12 @@ export default function ChannelPage() {
 
 type ErrorStateProps = {
   message: string;
+  isForbidden?: boolean;
   onRetry?: () => void;
   isLoading?: boolean;
 };
 
-function ErrorState({ message, onRetry, isLoading }: ErrorStateProps) {
+function ErrorState({ message, isForbidden, onRetry, isLoading }: ErrorStateProps) {
   return (
     <div className="flex h-full items-center justify-center px-6">
       <div className="max-w-md space-y-4 rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-center">
@@ -235,16 +245,22 @@ function ErrorState({ message, onRetry, isLoading }: ErrorStateProps) {
           <AlertTriangle className="h-6 w-6" />
         </div>
         <p className="text-sm text-destructive/90">{message}</p>
-        {onRetry && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRetry}
-            disabled={isLoading}
-            className={cn("gap-2", isLoading && "opacity-70")}
-          >
-            {isLoading ? "Retrying…" : "Try again"}
-          </Button>
+        {isForbidden ? (
+          <p className="text-xs text-muted-foreground">
+            Requesting to join a society will be available in a future update.
+          </p>
+        ) : (
+          onRetry && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRetry}
+              disabled={isLoading}
+              className={cn("gap-2", isLoading && "opacity-70")}
+            >
+              {isLoading ? "Retrying…" : "Try again"}
+            </Button>
+          )
         )}
       </div>
     </div>
