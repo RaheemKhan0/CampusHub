@@ -22,8 +22,12 @@ export class ChannelsController {
 
   @Post()
   @UseGuards(ChannelManageGuard)
-  create(@Param('serverId') serverId: string, @Body() dto: CreateChannelDto) {
-    return this.channels.create(serverId, dto);
+  create(
+    @Param('serverId') serverId: string,
+    @Body() dto: CreateChannelDto,
+    @Session() session: UserSession,
+  ) {
+    return this.channels.create(serverId, dto, session.user.id);
   }
 
   @Get()
@@ -35,7 +39,7 @@ export class ChannelsController {
     @Param('serverId') serverId: string,
     @Session() session: UserSession,
   ): Promise<ChannelListResponseDto> {
-    return this.channels.listVisible(session.user.id, serverId);
+    return this.channels.list(session.user.id, serverId);
   }
 
   @Get(':channelId')

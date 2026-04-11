@@ -1,8 +1,8 @@
 // channels.service.ts
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Channel, IChannel } from 'src/database/schemas/channel.schema';
-import { ChannelAccess } from 'src/database/schemas/channel-access.schema';
+import { ChannelAccess, IChannelAccess } from 'src/database/schemas/channel-access.schema';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelViewDto } from './dto/channel-view.dto';
 
@@ -11,18 +11,36 @@ export class ChannelsService {
   async create(
     serverId: string,
     dto: CreateChannelDto,
+    creatorId: string,
   ): Promise<ChannelViewDto> {
-    const channel = await Channel.create({
-      serverId,
-      name: dto.name,
-      type: dto.type,
-      privacy: dto.privacy,
-    });
+    let channel;
+    try {
+      channel = await Channel.create({
+        serverId,
+        name: dto.name,
+        type: dto.type,
+        privacy: dto.privacy,
+      });
+    } catch (err: unknown) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'code' in err &&
+        (err as { code?: number }).code === 11000
+      ) {
+        throw new ConflictException(
+          `A channel named "${dto.name}" already exists in this server`,
+        );
+      }
+      throw err;
+    }
 
     const channelObject = channel.toObject() as IChannel;
 
-    if (dto.privacy === 'hidden' && dto.memberIds?.length) {
-      const docs = dto.memberIds.map((userId) => ({
+    if (dto.privacy === 'hidden') {
+      // Always include the creator; merge in any extra memberIds
+      const memberSet = new Set([creatorId, ...(dto.memberIds ?? [])]);
+      const docs = Array.from(memberSet).map((userId) => ({
         channelId: channelObject._id,
         userId,
       }));
@@ -86,7 +104,7 @@ export class ChannelsService {
     };
   }
 
-  async listVisible(userId: string, serverId: string) {
+  async list(userId: string, serverId: string) {
     const sId = new Types.ObjectId(serverId);
 
     const publicDocs = await Channel.find({ serverId: sId, privacy: 'public' })
@@ -96,10 +114,10 @@ export class ChannelsService {
 
     const accessDocs = await ChannelAccess.find({ userId })
       .select('channelId')
-      .lean<IChannel[]>()
+      .lean<Pick<IChannelAccess, 'channelId'>[]>()
       .exec();
 
-    const channelIds = accessDocs.map((doc) => doc._id);
+    const channelIds = accessDocs.map((doc) => doc.channelId);
     const privateDocs = channelIds.length
       ? await Channel.find({
           _id: { $in: channelIds },
