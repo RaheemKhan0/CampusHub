@@ -21,6 +21,8 @@ import { Membership } from 'src/database/schemas/membership.schema';
 import type { IUser } from 'src/database/schemas/user.schema';
 import { AppUser } from 'src/database/schemas/user.schema';
 import { DegreeModule } from 'src/database/schemas/degree-module.schema';
+import type { IDegree } from 'src/database/schemas/degree.schema';
+import { Degree } from 'src/database/schemas/degree.schema';
 
 type MembershipRoles = Pick<IMembership, 'roles'>;
 
@@ -95,27 +97,36 @@ export class ServerService {
   }
 
   async findById(serverId: string, actorId: string): Promise<ServerViewDto> {
-    const user = await AppUser.findOne({ userId: actorId })
-      .select('isSuper')
-      .lean<UserSuperFlag | null>();
-    const isSuper = user?.isSuper ?? false;
+    const server = await ServerModel.findById(serverId).lean<IServer | null>();
+    if (!server) throw new NotFoundException('Server not found');
+
+    const appUser = await AppUser.findOne({ userId: actorId })
+      .select('isSuper degreeSlug')
+      .lean<Pick<IUser, 'isSuper' | 'degreeSlug'> | null>();
+    const isSuper = appUser?.isSuper ?? false;
 
     if (!isSuper) {
-      const membership = await Membership.findOne({
-        serverId,
-        userId: actorId,
-      })
-        .select('_id')
-        .lean<Pick<IMembership, '_id'> | null>();
+      if (server.type === 'unimodules') {
+        // Allow access based on degree match — no membership record needed
+        const degree = await Degree.findOne({ slug: appUser?.degreeSlug })
+          .select('_id')
+          .lean<Pick<IDegree, '_id'> | null>();
 
-      if (!membership) {
-        throw new ForbiddenException('Not allowed to access this server');
+        if (!degree || String(server.degreeId) !== String(degree._id)) {
+          throw new ForbiddenException('This server is not part of your degree');
+        }
+      } else {
+        // Society servers and all other types require an active membership
+        const membership = await Membership.findOne({
+          serverId,
+          userId: actorId,
+          status: 'active',
+        })
+          .select('_id')
+          .lean<Pick<IMembership, '_id'> | null>();
+
+        if (!membership) throw new ForbiddenException('Not allowed to access this server');
       }
-    }
-
-    const server = await ServerModel.findById(serverId).lean<IServer | null>();
-    if (!server) {
-      throw new NotFoundException('Server not found');
     }
 
     const moduleYear = await this.getDegreeModuleYear(server.degreeModuleId);
