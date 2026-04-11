@@ -16,6 +16,7 @@ export interface INotification extends Document {
   title: string;
   body?: string;
   data: Record<string, unknown>;
+  dedupeKey?: string; // optional globally-unique key to prevent duplicate inserts
   status: NotificationStatus;
   readAt?: Date;
   seenAt?: Date;
@@ -39,6 +40,7 @@ const NotificationSchema = new Schema<INotification>(
     title: { type: String, required: true },
     body: { type: String },
     data: { type: Schema.Types.Mixed, default: {} },
+    dedupeKey: { type: String },
     status: {
       type: String,
       required: true,
@@ -60,6 +62,10 @@ const NotificationSchema = new Schema<INotification>(
 NotificationSchema.index({ userId: 1, createdAt: -1 });
 NotificationSchema.index({ userId: 1, status: 1, createdAt: -1 });
 NotificationSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+NotificationSchema.index(
+  { dedupeKey: 1 },
+  { unique: true, sparse: true, name: 'notification_dedupe_key_unique' },
+);
 
 const existingNotificationModel = mongoose.models.Notification as
   | Model<INotification>
