@@ -22,7 +22,8 @@
     "servers-seed": "node -r ts-node/register -r tsconfig-paths/register src/database/script/seed.ts",
     "channels-seed": "node -r ts-node/register -r tsconfig-paths/register src/database/script/seed-channels.ts",
     "degree-seed": "node -r ts-node/register -r tsconfig-paths/register src/database/script/seed-degrees.ts",
-    "societies-seed": "node -r ts-node/register -r tsconfig-paths/register src/database/script/seed-societies.ts"
+    "societies-seed": "node -r ts-node/register -r tsconfig-paths/register src/database/script/seed-societies.ts",
+    "seed-all": "bash src/database/script/seed-all.sh"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
