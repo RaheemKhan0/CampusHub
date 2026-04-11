@@ -53,7 +53,12 @@ export class ServerMemberGuard implements CanActivate {
       return true;
     }
 
-    // Society servers and all other types: require membership
+    // Society servers: allow listing channels freely so users can browse
+    if (server.type === 'citysocieties') {
+      return true;
+    }
+
+    // All other types: require active membership
     const membership = await Membership.findOne({
       serverId,
       userId,
