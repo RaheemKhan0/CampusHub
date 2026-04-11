@@ -9,6 +9,8 @@ import {
   Get,
 } from '@nestjs/common';
 import { ChannelManageGuard } from 'src/lib/guards/channel-manage-guard';
+import { ServerMemberGuard } from 'src/lib/guards/server-member.guard';
+import { ChannelAccessGuard } from 'src/lib/guards/channel-access-guard';
 import { ChannelsService } from './channels.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { ChannelListResponseDto } from './dto/channel-list.dto';
@@ -31,6 +33,7 @@ export class ChannelsController {
   }
 
   @Get()
+  @UseGuards(ServerMemberGuard)
   @ApiOkResponse({
     type: ChannelListResponseDto,
     description: 'returns a channel list visible to the user',
@@ -43,6 +46,7 @@ export class ChannelsController {
   }
 
   @Get(':channelId')
+  @UseGuards(ChannelAccessGuard)
   @ApiOkResponse({
     type: ChannelViewDto,
     description: 'returns the desired channel',
