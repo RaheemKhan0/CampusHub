@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   ConflictException,
   ForbiddenException,
   NotFoundException,
@@ -23,6 +24,10 @@ import { AppUser } from 'src/database/schemas/user.schema';
 import { DegreeModule } from 'src/database/schemas/degree-module.schema';
 import type { IDegree } from 'src/database/schemas/degree.schema';
 import { Degree } from 'src/database/schemas/degree.schema';
+import { NotificationService } from '../notifications/notification.service';
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const MEMBERSHIP_STATUS_TTL_MS = 90 * DAY_MS;
 
 type MembershipRoles = Pick<IMembership, 'roles'>;
 
@@ -30,6 +35,9 @@ type UserSuperFlag = Pick<IUser, 'isSuper'>;
 
 @Injectable()
 export class ServerService {
+  private readonly logger = new Logger(ServerService.name);
+
+  constructor(private readonly notifications: NotificationService) {}
   async create(
     ownerId: string | null,
     dto: CreateServerDto,
@@ -369,6 +377,14 @@ export class ServerService {
       });
     }
 
+    await this.deliverMembershipStatusNotification({
+      userId: user.userId,
+      serverId,
+      serverName: server.name,
+      title: `You were added as an owner of ${server.name}`,
+      change: 'owner.added',
+    });
+
     return { ok: true };
   }
 
@@ -396,6 +412,51 @@ export class ServerService {
       { $pull: { roles: 'owner' } },
     );
 
+    await this.deliverMembershipStatusNotification({
+      userId: targetUserId,
+      actorId,
+      serverId,
+      serverName: server.name,
+      title: `Your owner role was removed in ${server.name}`,
+      change: 'owner.removed',
+    });
+
     return { ok: true };
+  }
+
+  private async deliverMembershipStatusNotification(args: {
+    userId: string;
+    actorId?: string;
+    serverId: string;
+    serverName: string;
+    title: string;
+    body?: string;
+    change: string;
+  }): Promise<void> {
+    if (args.actorId && args.actorId === args.userId) return;
+    try {
+      await this.notifications.createNotification({
+        userId: args.userId,
+        actorId: args.actorId,
+        serverId: args.serverId,
+        serverName: args.serverName,
+        type: 'membership.status',
+        title: args.title,
+        body: args.body,
+        data: { change: args.change },
+        // No dedupeKey: repeated role churn (add → remove → add) produces
+        // legitimately distinct events. Membership changes are rare enough
+        // that accidental-retry protection isn't worth losing that.
+        expiresAt: new Date(
+          Date.now() + MEMBERSHIP_STATUS_TTL_MS,
+        ).toISOString(),
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Failed to create membership status notification for user ${args.userId}: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    }
   }
 }
