@@ -217,6 +217,7 @@ export default function ChannelPage() {
   return (
     <div className="flex h-full w-full flex-1 flex-col overflow-hidden">
       <MessagePanel
+        channelId={channelId}
         channelName={channelQuery.data.name}
         channelTopic={channelQuery.data.topic}
         messages={optimisticMessages}
