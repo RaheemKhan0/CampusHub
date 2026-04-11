@@ -113,6 +113,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Creates notificaion in the database for the specified user */
+        post: operations["NotificationContoller_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List unread notifications for the current user */
+        get: operations["NotificationContoller_listUnread"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/{notificationId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark a notification as read */
+        patch: operations["NotificationContoller_markRead"];
+        trace?: never;
+    };
+    "/notifications/preferences/channels/{channelId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the current user's notification preference for a channel */
+        get: operations["NotificationContoller_getChannelPreference"];
+        /** Update the current user's notification preference for a channel */
+        put: operations["NotificationContoller_setChannelPreference"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NotificationContoller_stream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/servers/{serverId}/channels": {
         parameters: {
             query?: never;
@@ -189,73 +274,6 @@ export interface paths {
         put?: never;
         /** Create a new message in the channel */
         post: operations["MessagesController_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Creates notificaion in the database for the specified user */
-        post: operations["NotificationContoller_create"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/unread": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List unread notifications for the current user */
-        get: operations["NotificationContoller_listUnread"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/notifications/{notificationId}/read": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        /** Mark a notification as read */
-        patch: operations["NotificationContoller_markRead"];
-        trace?: never;
-    };
-    "/notifications/stream": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["NotificationContoller_stream"];
-        put?: never;
-        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3586,6 +3604,146 @@ export interface components {
              */
             email: string;
         };
+        CreateNotificationDto: {
+            /**
+             * @description Recipient BetterAuth user id
+             * @example usr_01hxt8zshm8yc6a5n8s6k1qj3r
+             */
+            userId: string;
+            /** @description Channel identifier (if applicable) */
+            channelId?: string;
+            /** @description Server identifier (if applicable) */
+            serverId?: string;
+            /** @description Server name (if applicable) */
+            serverName?: string;
+            /**
+             * @description Notification type
+             * @example message.mention
+             * @enum {string}
+             */
+            type: "message.create" | "message.mention" | "channel.invite" | "membership.status" | "generic";
+            /**
+             * @description Primary title for display
+             * @example New mention in #freshers
+             */
+            title: string;
+            /**
+             * @description Optional body or preview text
+             * @example Alice mentioned you in #freshers
+             */
+            body?: string;
+            /**
+             * @description Actor user id triggering the notification
+             * @example usr_01hxt8zshm8yc6a5n8s6k1qabc
+             */
+            actorId?: string;
+            /** @description Structured context payload (server/channel/message ids) */
+            data?: Record<string, never>;
+            /**
+             * @description Expiry timestamp; notification auto-deletes afterwards
+             * @example 2024-05-20T00:00:00.000Z
+             */
+            expiresAt?: string;
+            /** @description Globally-unique dedupe key; duplicate creates with the same key are silently dropped */
+            dedupeKey?: string;
+        };
+        NotificationViewDto: {
+            /**
+             * @description Notification identifier
+             * @example ntf_01hyf4a12x3n8zg9c0p7
+             */
+            id: string;
+            /**
+             * @description Recipient user id
+             * @example usr_01hxt8zshm8yc6a5n8s6k1qj3r
+             */
+            userId: string;
+            /**
+             * @description Actor user id if applicable
+             * @example usr_01hxt8zshm8yc6a5n8s6k1qabc
+             */
+            actorId?: string;
+            /**
+             * @description Server identifier associated with this notification
+             * @example srv_01hxt8zshm8yc6a5n8s6k1qz9x
+             */
+            serverId?: string;
+            /**
+             * @description Server name for display
+             * @example Physics 101
+             */
+            serverName?: string;
+            /**
+             * @description Channel identifier if the notification targets a channel
+             * @example chn_01hxt8zshm8yc6a5n8s6k1qy1m
+             */
+            channelId?: string;
+            /**
+             * @description Notification type discriminator
+             * @example message.mention
+             * @enum {string}
+             */
+            type: "message.create" | "message.mention" | "channel.invite" | "membership.status" | "generic";
+            /**
+             * @description Display title
+             * @example New mention in #freshers
+             */
+            title: string;
+            /**
+             * @description Optional body/preview
+             * @example Alice mentioned you in #freshers
+             */
+            body?: string;
+            /**
+             * @description Current status
+             * @example unread
+             * @enum {string}
+             */
+            status: "unread" | "read";
+            data?: Record<string, never>;
+            /**
+             * @description Creation timestamp
+             * @example 2024-05-16T09:15:30.000Z
+             */
+            createdAt: string;
+            /**
+             * @description Last update timestamp
+             * @example 2024-05-16T09:15:30.000Z
+             */
+            updatedAt: string;
+            /**
+             * @description Read timestamp if set
+             * @example 2024-05-16T10:00:00.000Z
+             */
+            readAt?: string;
+            /**
+             * @description Seen timestamp for badge counts
+             * @example 2024-05-16T10:05:00.000Z
+             */
+            seenAt?: string;
+            /**
+             * @description Expiry timestamp (auto-clean via TTL)
+             * @example 2024-05-20T00:00:00.000Z
+             */
+            expiresAt?: string;
+        };
+        NotificationPreferenceViewDto: {
+            /** @description Target channel id */
+            channelId: string;
+            /**
+             * @description Notification level for this channel
+             * @enum {string}
+             */
+            level: "all" | "mentions" | "none";
+        };
+        UpdateNotificationPreferenceDto: {
+            /**
+             * @description Notification level for this channel
+             * @example all
+             * @enum {string}
+             */
+            level: "all" | "mentions" | "none";
+        };
         CreateChannelDto: {
             name: string;
             /** @enum {string} */
@@ -3774,127 +3932,6 @@ export interface components {
              * @example false
              */
             hasMore: boolean;
-        };
-        CreateNotificationDto: {
-            /**
-             * @description Recipient BetterAuth user id
-             * @example usr_01hxt8zshm8yc6a5n8s6k1qj3r
-             */
-            userId: string;
-            /** @description Channel identifier (if applicable) */
-            channelId?: string;
-            /** @description Server identifier (if applicable) */
-            serverId?: string;
-            /** @description Server name (if applicable) */
-            serverName?: string;
-            /**
-             * @description Notification type
-             * @example message.mention
-             * @enum {string}
-             */
-            type: "message.create" | "message.mention" | "channel.invite" | "membership.status" | "generic";
-            /**
-             * @description Primary title for display
-             * @example New mention in #freshers
-             */
-            title: string;
-            /**
-             * @description Optional body or preview text
-             * @example Alice mentioned you in #freshers
-             */
-            body?: string;
-            /**
-             * @description Actor user id triggering the notification
-             * @example usr_01hxt8zshm8yc6a5n8s6k1qabc
-             */
-            actorId?: string;
-            /** @description Structured context payload (server/channel/message ids) */
-            data?: Record<string, never>;
-            /**
-             * @description Expiry timestamp; notification auto-deletes afterwards
-             * @example 2024-05-20T00:00:00.000Z
-             */
-            expiresAt?: string;
-        };
-        NotificationViewDto: {
-            /**
-             * @description Notification identifier
-             * @example ntf_01hyf4a12x3n8zg9c0p7
-             */
-            id: string;
-            /**
-             * @description Recipient user id
-             * @example usr_01hxt8zshm8yc6a5n8s6k1qj3r
-             */
-            userId: string;
-            /**
-             * @description Actor user id if applicable
-             * @example usr_01hxt8zshm8yc6a5n8s6k1qabc
-             */
-            actorId?: string;
-            /**
-             * @description Server identifier associated with this notification
-             * @example srv_01hxt8zshm8yc6a5n8s6k1qz9x
-             */
-            serverId?: string;
-            /**
-             * @description Server name for display
-             * @example Physics 101
-             */
-            serverName?: string;
-            /**
-             * @description Channel identifier if the notification targets a channel
-             * @example chn_01hxt8zshm8yc6a5n8s6k1qy1m
-             */
-            channelId?: string;
-            /**
-             * @description Notification type discriminator
-             * @example message.mention
-             * @enum {string}
-             */
-            type: "message.create" | "message.mention" | "channel.invite" | "membership.status" | "generic";
-            /**
-             * @description Display title
-             * @example New mention in #freshers
-             */
-            title: string;
-            /**
-             * @description Optional body/preview
-             * @example Alice mentioned you in #freshers
-             */
-            body?: string;
-            /**
-             * @description Current status
-             * @example unread
-             * @enum {string}
-             */
-            status: "unread" | "read";
-            data?: Record<string, never>;
-            /**
-             * @description Creation timestamp
-             * @example 2024-05-16T09:15:30.000Z
-             */
-            createdAt: string;
-            /**
-             * @description Last update timestamp
-             * @example 2024-05-16T09:15:30.000Z
-             */
-            updatedAt: string;
-            /**
-             * @description Read timestamp if set
-             * @example 2024-05-16T10:00:00.000Z
-             */
-            readAt?: string;
-            /**
-             * @description Seen timestamp for badge counts
-             * @example 2024-05-16T10:05:00.000Z
-             */
-            seenAt?: string;
-            /**
-             * @description Expiry timestamp (auto-clean via TTL)
-             * @example 2024-05-20T00:00:00.000Z
-             */
-            expiresAt?: string;
         };
         DegreeViewDto: {
             /** @description Degree identifier */
@@ -4202,6 +4239,134 @@ export interface operations {
             };
         };
     };
+    NotificationContoller_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateNotificationDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationViewDto"];
+                };
+            };
+        };
+    };
+    NotificationContoller_listUnread: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationViewDto"][];
+                };
+            };
+        };
+    };
+    NotificationContoller_markRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notificationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationViewDto"];
+                };
+            };
+        };
+    };
+    NotificationContoller_getChannelPreference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channelId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferenceViewDto"];
+                };
+            };
+        };
+    };
+    NotificationContoller_setChannelPreference: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channelId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateNotificationPreferenceDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferenceViewDto"];
+                };
+            };
+        };
+    };
+    NotificationContoller_stream: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+        };
+    };
     ChannelsController_list: {
         parameters: {
             query?: never;
@@ -4380,88 +4545,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MessageViewDto"];
-                };
-            };
-        };
-    };
-    NotificationContoller_create: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateNotificationDto"];
-            };
-        };
-        responses: {
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NotificationViewDto"];
-                };
-            };
-        };
-    };
-    NotificationContoller_listUnread: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NotificationViewDto"][];
-                };
-            };
-        };
-    };
-    NotificationContoller_markRead: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                notificationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["NotificationViewDto"];
-                };
-            };
-        };
-    };
-    NotificationContoller_stream: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": Record<string, never>;
                 };
             };
         };
