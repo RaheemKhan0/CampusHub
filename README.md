@@ -12,6 +12,39 @@ campushub/
 
 Both services own their own `Dockerfile`, `package.json`, and lint config.
 
+> **Important:** Follow **all** the steps in whichever path you choose (Docker or manual). Do not mix steps between the two.
+
+### Pre-seeded account
+
+The society seed script creates a default user you can log in with immediately after seeding:
+
+| Field    | Value                  |
+|----------|------------------------|
+| Email    | `student@city.ac.uk`   |
+| Password | `Task.board1`          |
+
+This account is the **owner** of every society server, so it has full access to the features listed below.
+
+### Features to explore
+
+Once logged in with the seeded account, the following features are available to test:
+
+- **Real-time messaging** — send and receive messages in any channel with instant delivery via WebSocket (socket.io). Messages appear without refreshing the page.
+- **Notification system** — real-time SSE-based notifications. A bell icon in the header shows unread count. Notifications appear as toasts and can be clicked to navigate to the relevant channel/server.
+- **Per-channel notification preferences** — in any channel header, use the bell dropdown to set your preference to All messages (default), Mentions only, or Muted.
+- **RBAC (role-based access control)** — the seeded account has the `owner` role on all society servers, which grants the ability to create and manage both public and hidden channels.
+- **Channel creation** — owners/admins can create public channels (visible to all members) and hidden channels (invite-only, access-controlled).
+- **University module servers** — degree modules are auto-seeded as servers with public channels, accessible to all `@city.ac.uk` users without requiring membership.
+
+### Known limitations
+
+The following features are **not yet implemented**:
+
+- Adding/removing members from servers or hidden channels via the UI
+- Transferring server ownership
+- User profile editing
+- `@mention` autocomplete in the message composer (backend handles mentions, but the composer does not yet populate them)
+
 ---
 
 ## 1. Running with Docker (recommended — zero setup)
@@ -64,7 +97,7 @@ The following are pre-set in `docker-compose.yml` — no action required. Overri
 - `BETTER_AUTH_BASE_URL=http://localhost:4000`
 - `API_SPEC_URL=http://campus-api:4000/api-json` (internal compose DNS, for the build-time openapi sync)
 
-### 1.5 Seeding the database
+### 1.5 Seeding the database (Super Important to see the app function itself!)
 
 The first time you run against a fresh Mongo volume, seed the reference data with one command:
 make sure you are actualy first running the docker compose command otherwise it the command below will have no container to execute on!
@@ -86,9 +119,9 @@ docker compose exec backend npm run societies-seed
 
 ### 1.6 First login
 
-1. Open http://localhost:3000 → sign up with an email whose domain is in `ALLOWED_EMAIL_DOMAINS` (default: `city.ac.uk`).
-2. If that email matches `SUPER_USER_EMAIL`, the account is promoted to super user on first login.
-3. You're in.
+1. Open http://localhost:3000.
+2. **Recommended:** Log in with the pre-seeded account (`student@city.ac.uk` / `Task.board1`) to see all features — this account owns every society server.
+3. Alternatively, sign up with any `@city.ac.uk` email to create a fresh account.
 
 ### 1.7 Common operations
 
@@ -178,7 +211,11 @@ API_SPEC_URL=http://localhost:4000/api-json
 **Option A: native install.** Follow the official installation guide for your OS (`brew install mongodb-community@7` on macOS, `apt install mongodb-org` on Debian/Ubuntu, etc.) and start the service:
 
 ```bash
-docker compose up --build
+# macOS (Homebrew)
+brew services start mongodb-community@7
+
+# Linux (systemd)
+sudo systemctl start mongod
 ```
 
 **Option B: one-off Docker container for Mongo only.** If you don't want to install Mongo natively:
