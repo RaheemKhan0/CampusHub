@@ -62,7 +62,10 @@ export class ChannelAccessGuard implements CanActivate {
 
       // For hidden channels in unimodules, still enforce ChannelAccess
       if (channel.privacy === 'hidden') {
-        const access = await ChannelAccess.findOne({ channelId: channel._id, userId })
+        const access = await ChannelAccess.findOne({
+          channelId: channel._id,
+          userId,
+        })
           .select('_id')
           .lean<IChannelAccess | null>();
         if (!access) throw new ForbiddenException('No access to this channel');
@@ -83,7 +86,10 @@ export class ChannelAccessGuard implements CanActivate {
       })
         .select('_id')
         .lean<Pick<IMembership, '_id'> | null>();
-      if (!membership) throw new ForbiddenException('You must be a member of this society to access this channel');
+      if (!membership)
+        throw new ForbiddenException(
+          'You must be a member of this society to access this channel',
+        );
       return true;
     }
 
@@ -103,7 +109,10 @@ export class ChannelAccessGuard implements CanActivate {
         roleDoc.roles.includes('owner') || roleDoc.roles.includes('admin');
       if (isAdmin) return true;
 
-      const access = await ChannelAccess.findOne({ channelId: channel._id, userId })
+      const access = await ChannelAccess.findOne({
+        channelId: channel._id,
+        userId,
+      })
         .select('_id')
         .lean<IChannelAccess | null>();
       if (!access) throw new ForbiddenException('No access to this channel');

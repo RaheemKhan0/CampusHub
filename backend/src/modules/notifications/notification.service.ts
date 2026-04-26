@@ -181,7 +181,11 @@ export class NotificationService {
 
   async listNotifications(
     userId: string,
-    options?: { status?: NotificationStatus; limit?: number; excludeActorId?: string },
+    options?: {
+      status?: NotificationStatus;
+      limit?: number;
+      excludeActorId?: string;
+    },
   ): Promise<NotificationViewDto[]> {
     const filter: FilterQuery<INotification> = {
       userId,
@@ -204,7 +208,10 @@ export class NotificationService {
     return docs.map((doc) => this.toNotificationView(doc));
   }
 
-  async markAsRead(userId: string, notificationId: string): Promise<NotificationViewDto | null> {
+  async markAsRead(
+    userId: string,
+    notificationId: string,
+  ): Promise<NotificationViewDto | null> {
     const notification = await Notification.findOneAndUpdate(
       {
         _id: notificationId,

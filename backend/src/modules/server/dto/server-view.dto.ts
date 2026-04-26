@@ -1,5 +1,10 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { type ServerType, ServerTypes, type SocietyCategory, SocietyCategoryTypes } from 'src/database/types';
+import {
+  type ServerType,
+  ServerTypes,
+  type SocietyCategory,
+  SocietyCategoryTypes,
+} from 'src/database/types';
 
 export class ServerViewDto {
   @ApiProperty()

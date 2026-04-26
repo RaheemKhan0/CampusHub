@@ -74,7 +74,9 @@ export class ChannelsController {
   @UseGuards(ChannelManageGuard)
   @ApiParam({ name: 'serverId', type: String })
   @ApiParam({ name: 'channelId', type: String })
-  @ApiOkResponse({ description: 'Deletes a channel and all its access records' })
+  @ApiOkResponse({
+    description: 'Deletes a channel and all its access records',
+  })
   deleteChannel(@Param('channelId') channelId: string) {
     return this.channels.deleteChannel(channelId);
   }

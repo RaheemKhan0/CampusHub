@@ -121,7 +121,9 @@ export class ServerService {
           .lean<Pick<IDegree, '_id'> | null>();
 
         if (!degree || String(server.degreeId) !== String(degree._id)) {
-          throw new ForbiddenException('This server is not part of your degree');
+          throw new ForbiddenException(
+            'This server is not part of your degree',
+          );
         }
       } else if (server.type !== 'citysocieties') {
         // All other types (not unimodules, not societies) require active membership
@@ -133,7 +135,8 @@ export class ServerService {
           .select('_id')
           .lean<Pick<IMembership, '_id'> | null>();
 
-        if (!membership) throw new ForbiddenException('Not allowed to access this server');
+        if (!membership)
+          throw new ForbiddenException('Not allowed to access this server');
       }
     }
 
@@ -310,8 +313,7 @@ export class ServerService {
     const moduleYearMap = await this.buildModuleYearMap(docs);
     const items = docs.map((item) =>
       this.toServerView(item, {
-        moduleYear:
-          moduleYearMap.get(String(item.degreeModuleId)) ?? undefined,
+        moduleYear: moduleYearMap.get(String(item.degreeModuleId)) ?? undefined,
       }),
     );
     return {
@@ -338,8 +340,15 @@ export class ServerService {
     return map;
   }
 
-  async myRoles(serverId: string, userId: string): Promise<{ roles: string[] }> {
-    const membership = await Membership.findOne({ serverId, userId, status: 'active' })
+  async myRoles(
+    serverId: string,
+    userId: string,
+  ): Promise<{ roles: string[] }> {
+    const membership = await Membership.findOne({
+      serverId,
+      userId,
+      status: 'active',
+    })
       .select('roles')
       .lean<Pick<IMembership, 'roles'> | null>();
     return { roles: membership?.roles ?? [] };
@@ -361,7 +370,9 @@ export class ServerService {
 
     if (existing) {
       if (existing.roles.includes('owner')) {
-        throw new UnprocessableEntityException('User is already an owner of this server');
+        throw new UnprocessableEntityException(
+          'User is already an owner of this server',
+        );
       }
       await Membership.updateOne(
         { serverId, userId: user.userId },
@@ -388,7 +399,11 @@ export class ServerService {
     return { ok: true };
   }
 
-  async removeOwner(serverId: string, targetUserId: string, actorId: string): Promise<{ ok: true }> {
+  async removeOwner(
+    serverId: string,
+    targetUserId: string,
+    actorId: string,
+  ): Promise<{ ok: true }> {
     const server = await ServerModel.findById(serverId).lean<IServer | null>();
     if (!server) throw new NotFoundException('Server not found');
 
@@ -399,10 +414,15 @@ export class ServerService {
       status: 'active',
     });
     if (ownerCount <= 1) {
-      throw new UnprocessableEntityException('Cannot remove the last owner of a server');
+      throw new UnprocessableEntityException(
+        'Cannot remove the last owner of a server',
+      );
     }
 
-    const membership = await Membership.findOne({ serverId, userId: targetUserId }).lean<Pick<IMembership, 'roles'> | null>();
+    const membership = await Membership.findOne({
+      serverId,
+      userId: targetUserId,
+    }).lean<Pick<IMembership, 'roles'> | null>();
     if (!membership || !membership.roles.includes('owner')) {
       throw new NotFoundException('User is not an owner of this server');
     }

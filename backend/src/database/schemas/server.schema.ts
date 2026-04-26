@@ -1,5 +1,10 @@
 import mongoose, { type Model, Schema, Document, Types } from 'mongoose';
-import { ServerType, ServerTypes, SocietyCategory, SocietyCategoryTypes } from '../types';
+import {
+  ServerType,
+  ServerTypes,
+  SocietyCategory,
+  SocietyCategoryTypes,
+} from '../types';
 
 export interface IServer extends Document {
   name: string;
@@ -32,7 +37,12 @@ const ServerSchema = new Schema<IServer>(
     },
     ownerId: { type: String, required: false, index: true },
     icon: { type: String },
-    category: { type: String, enum: SocietyCategoryTypes as unknown as string[], required: false, index: true },
+    category: {
+      type: String,
+      enum: SocietyCategoryTypes as unknown as string[],
+      required: false,
+      index: true,
+    },
     type: {
       type: String,
       enum: ServerTypes as unknown as string[],

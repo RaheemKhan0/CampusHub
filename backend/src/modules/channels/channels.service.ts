@@ -1,10 +1,21 @@
 // channels.service.ts
-import { Injectable, Logger, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Channel, IChannel } from 'src/database/schemas/channel.schema';
 import { ServerModel, IServer } from 'src/database/schemas/server.schema';
-import { ChannelAccess, IChannelAccess } from 'src/database/schemas/channel-access.schema';
-import { Membership, IMembership } from 'src/database/schemas/membership.schema';
+import {
+  ChannelAccess,
+  IChannelAccess,
+} from 'src/database/schemas/channel-access.schema';
+import {
+  Membership,
+  IMembership,
+} from 'src/database/schemas/membership.schema';
 import { AppUser, IUser } from 'src/database/schemas/user.schema';
 import { Degree, IDegree } from 'src/database/schemas/degree.schema';
 import { NotificationService } from '../notifications/notification.service';
@@ -47,6 +58,7 @@ export class ChannelsService {
       throw err;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const channelObject = channel.toObject() as IChannel;
 
     if (dto.privacy === 'hidden') {
@@ -170,7 +182,9 @@ export class ChannelsService {
   }
 
   async deleteChannel(channelId: string): Promise<{ ok: true }> {
-    const channel = await Channel.findByIdAndDelete(channelId).lean<IChannel | null>();
+    const channel = await Channel.findByIdAndDelete(
+      channelId,
+    ).lean<IChannel | null>();
     if (!channel) throw new NotFoundException('Channel not found');
     await ChannelAccess.deleteMany({ channelId });
     return { ok: true };
@@ -274,8 +288,7 @@ export class ChannelsService {
 
     return memberships
       .filter((m) => {
-        const isAdmin =
-          m.roles.includes('owner') || m.roles.includes('admin');
+        const isAdmin = m.roles.includes('owner') || m.roles.includes('admin');
         return isAdmin || accessSet.has(m.userId);
       })
       .map((m) => m.userId);

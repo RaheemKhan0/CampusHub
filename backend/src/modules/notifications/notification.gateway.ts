@@ -1,7 +1,17 @@
-import { UseGuards, UsePipes, Injectable, ValidationPipe, Logger } from "@nestjs/common";
-import { WebSocketGateway, WebSocketServer, WsException } from "@nestjs/websockets";
-import { NotificationService } from "./notification.service";
-import { WsAuthGuard } from "src/lib/guards/WsAuthGuard";
+import {
+  UseGuards,
+  UsePipes,
+  Injectable,
+  ValidationPipe,
+  Logger,
+} from '@nestjs/common';
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  WsException,
+} from '@nestjs/websockets';
+import { NotificationService } from './notification.service';
+import { WsAuthGuard } from 'src/lib/guards/WsAuthGuard';
 import { Server, Socket } from 'socket.io';
 
 const DEFAULT_ORIGIN = 'http://localhost:3000';
@@ -16,11 +26,11 @@ type GatewaySocket = Socket & { data?: { user?: GatewayUser } };
 
 @UseGuards(WsAuthGuard)
 @UsePipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-    }),
+  new ValidationPipe({
+    transform: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  }),
 )
 @WebSocketGateway({
   namespace: 'notifications',
@@ -34,30 +44,24 @@ type GatewaySocket = Socket & { data?: { user?: GatewayUser } };
 })
 @Injectable()
 export class NotificationGateway {
-  
   private readonly logger = new Logger(NotificationGateway.name);
-  constructor (private readonly notificationService : NotificationService) {}
+  constructor(private readonly notificationService: NotificationService) {}
   @WebSocketServer()
   server!: Server;
- 
+
   handleConnection(client: GatewaySocket) {
     this.getClientUser(client, false);
   }
   handleDisconnect(client: GatewaySocket) {
-   this.logger.debug(`Socket ${client.id} disconnected`);
+    this.logger.debug(`Socket ${client.id} disconnected`);
   }
 
-
-
-  
-  private getClientUser(client: GatewaySocket, enforce = true) : GatewayUser {
-    const socketData = client.data as { user ?: GatewayUser } | undefined;
+  private getClientUser(client: GatewaySocket, enforce = true): GatewayUser {
+    const socketData = client.data as { user?: GatewayUser } | undefined;
     const user = socketData?.user ?? null;
     if (!user?.id && enforce) {
       throw new WsException('unauthorized');
     }
-    return user ?? { id : '' }
+    return user ?? { id: '' };
   }
-
 }
-
