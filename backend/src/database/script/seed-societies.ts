@@ -9,40 +9,46 @@ import { auth } from '../../lib/betterauth';
 
 const societies: { name: string; category: SocietyCategory }[] = [
   // Sports & Fitness
-  { name: 'City Football Club',          category: 'Sports & Fitness' },
-  { name: 'Basketball Society',          category: 'Sports & Fitness' },
-  { name: 'Tennis Club',                 category: 'Sports & Fitness' },
-  { name: 'Swimming & Water Polo',       category: 'Sports & Fitness' },
-  { name: 'Badminton Society',           category: 'Sports & Fitness' },
-  { name: 'Volleyball Club',             category: 'Sports & Fitness' },
-  { name: 'Cycling Society',             category: 'Sports & Fitness' },
-  { name: 'Martial Arts Society',        category: 'Sports & Fitness' },
+  { name: 'City Football Club', category: 'Sports & Fitness' },
+  { name: 'Basketball Society', category: 'Sports & Fitness' },
+  { name: 'Tennis Club', category: 'Sports & Fitness' },
+  { name: 'Swimming & Water Polo', category: 'Sports & Fitness' },
+  { name: 'Badminton Society', category: 'Sports & Fitness' },
+  { name: 'Volleyball Club', category: 'Sports & Fitness' },
+  { name: 'Cycling Society', category: 'Sports & Fitness' },
+  { name: 'Martial Arts Society', category: 'Sports & Fitness' },
 
   // Academic & Professional
-  { name: 'Computer Science Society',    category: 'Academic & Professional' },
-  { name: 'Mathematics Society',         category: 'Academic & Professional' },
-  { name: 'Law Society',                 category: 'Academic & Professional' },
+  { name: 'Computer Science Society', category: 'Academic & Professional' },
+  { name: 'Mathematics Society', category: 'Academic & Professional' },
+  { name: 'Law Society', category: 'Academic & Professional' },
   { name: 'Economics & Finance Society', category: 'Academic & Professional' },
-  { name: 'Engineering Society',         category: 'Academic & Professional' },
-  { name: 'Psychology Society',          category: 'Academic & Professional' },
-  { name: 'Debate Society',              category: 'Academic & Professional' },
-  { name: 'Model United Nations',        category: 'Academic & Professional' },
+  { name: 'Engineering Society', category: 'Academic & Professional' },
+  { name: 'Psychology Society', category: 'Academic & Professional' },
+  { name: 'Debate Society', category: 'Academic & Professional' },
+  { name: 'Model United Nations', category: 'Academic & Professional' },
 
   // Arts & Culture
-  { name: 'Film & Media Society',        category: 'Arts & Culture' },
-  { name: 'Photography Society',         category: 'Arts & Culture' },
-  { name: 'Music Society',               category: 'Arts & Culture' },
-  { name: 'Drama & Theatre Society',     category: 'Arts & Culture' },
-  { name: 'Art & Design Society',        category: 'Arts & Culture' },
+  { name: 'Film & Media Society', category: 'Arts & Culture' },
+  { name: 'Photography Society', category: 'Arts & Culture' },
+  { name: 'Music Society', category: 'Arts & Culture' },
+  { name: 'Drama & Theatre Society', category: 'Arts & Culture' },
+  { name: 'Art & Design Society', category: 'Arts & Culture' },
 
   // Community & Lifestyle
-  { name: 'Gaming Society',                      category: 'Community & Lifestyle' },
-  { name: 'Chess Club',                          category: 'Community & Lifestyle' },
-  { name: 'Cooking & Food Society',              category: 'Community & Lifestyle' },
-  { name: 'Entrepreneurship Society',            category: 'Community & Lifestyle' },
-  { name: 'Volunteering & Community Outreach',   category: 'Community & Lifestyle' },
-  { name: 'Environmental & Sustainability Society', category: 'Community & Lifestyle' },
-  { name: 'International Students Society',      category: 'Community & Lifestyle' },
+  { name: 'Gaming Society', category: 'Community & Lifestyle' },
+  { name: 'Chess Club', category: 'Community & Lifestyle' },
+  { name: 'Cooking & Food Society', category: 'Community & Lifestyle' },
+  { name: 'Entrepreneurship Society', category: 'Community & Lifestyle' },
+  {
+    name: 'Volunteering & Community Outreach',
+    category: 'Community & Lifestyle',
+  },
+  {
+    name: 'Environmental & Sustainability Society',
+    category: 'Community & Lifestyle',
+  },
+  { name: 'International Students Society', category: 'Community & Lifestyle' },
 ];
 
 const DEFAULT_OWNER_EMAIL = 'student@city.ac.uk';
@@ -61,13 +67,17 @@ async function ensureDefaultOwner(): Promise<string> {
     .lean<{ userId: string } | null>();
 
   if (existingAppUser) {
-    console.log(`[ok] Default owner already exists: ${DEFAULT_OWNER_EMAIL} (${existingAppUser.userId})`);
+    console.log(
+      `[ok] Default owner already exists: ${DEFAULT_OWNER_EMAIL} (${existingAppUser.userId})`,
+    );
     return existingAppUser.userId;
   }
 
   // Use Better Auth's internal API to sign up — this handles password hashing,
   // BA user + account creation, and fires the after-hook that creates AppUser.
-  console.log(`[info] Creating default owner via Better Auth: ${DEFAULT_OWNER_EMAIL}`);
+  console.log(
+    `[info] Creating default owner via Better Auth: ${DEFAULT_OWNER_EMAIL}`,
+  );
   const result = await auth.api.signUpEmail({
     body: {
       email: DEFAULT_OWNER_EMAIL,
@@ -80,10 +90,14 @@ async function ensureDefaultOwner(): Promise<string> {
 
   const userId = result?.user?.id;
   if (!userId) {
-    throw new Error(`Better Auth signUpEmail did not return a user id for ${DEFAULT_OWNER_EMAIL}`);
+    throw new Error(
+      `Better Auth signUpEmail did not return a user id for ${DEFAULT_OWNER_EMAIL}`,
+    );
   }
 
-  console.log(`[ok] Created user via Better Auth: ${DEFAULT_OWNER_EMAIL} (${userId})`);
+  console.log(
+    `[ok] Created user via Better Auth: ${DEFAULT_OWNER_EMAIL} (${userId})`,
+  );
 
   // The after-hook should have created AppUser, but verify
   const appUser = await AppUser.findOne({ userId })
@@ -111,7 +125,9 @@ async function main() {
   await connectDB();
 
   // Clear existing society servers and their memberships
-  const existingServers = await ServerModel.find({ type: 'citysocieties' }).select('_id').lean();
+  const existingServers = await ServerModel.find({ type: 'citysocieties' })
+    .select('_id')
+    .lean();
   const existingIds = existingServers.map((s) => s._id);
   if (existingIds.length) {
     await Membership.deleteMany({ serverId: { $in: existingIds } });

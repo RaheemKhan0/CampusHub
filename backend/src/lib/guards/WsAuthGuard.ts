@@ -34,8 +34,8 @@ export class WsAuthGuard implements CanActivate {
       session = (await auth.api.getSession({
         headers: convertedHeaders,
       })) as Session | null;
-    } catch (error) {
-
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_error) {
       throw new WsException('Unauthorized');
     }
 

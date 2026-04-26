@@ -1,8 +1,29 @@
-import { Body, Controller, Get, Param, Patch, Post, Put, Sse, UseGuards, Logger, NotFoundException } from '@nestjs/common';
-import { AuthGuard, Session, type UserSession } from '@thallesp/nestjs-better-auth';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  Sse,
+  UseGuards,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import {
+  AuthGuard,
+  Session,
+  type UserSession,
+} from '@thallesp/nestjs-better-auth';
 import { NotificationService } from './notification.service';
 import { NotificationPreferenceService } from './notification-preference.service';
-import { ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiParam } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { NotificationViewDto } from './dto/notification-view.dto';
 import {
@@ -95,7 +116,9 @@ export class NotificationContoller {
 
   @Sse('stream')
   stream(@Req() req: Request): Observable<MessageEvent> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const currentUserId = (req as any).user?.id as string | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const currentUserName = (req as any).user?.name as string | undefined;
     this.logger.debug(
       `Client subscribed to /notifications/stream user=${currentUserId ?? 'unknown'} name=${currentUserName ?? 'unknown'}`,

@@ -128,7 +128,9 @@ export class ServerController {
   }
 
   @Get(':serverId/me')
-  @ApiOperation({ summary: 'Get the current user membership roles for a server' })
+  @ApiOperation({
+    summary: 'Get the current user membership roles for a server',
+  })
   @ApiParam({ name: 'serverId', type: String })
   @ApiOkResponse({
     description: 'Returns the roles array for the current user in this server',

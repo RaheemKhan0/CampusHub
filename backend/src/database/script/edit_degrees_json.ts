@@ -1,14 +1,17 @@
-import degrees from "./degree.json";
-import fs from "fs";
-import path from "path";
+import degrees from './degree.json';
+import fs from 'fs';
+import path from 'path';
 
 try {
-  const outputPath = path.join(__dirname, "output.json");
+  const outputPath = path.join(__dirname, 'output.json');
 
   const updated = {
     ...degrees,
     degrees: degrees.degrees.map((degree) => {
-      const degree_name = degree.degree_title == "BSc (Hons) Computer Science" ? "bsc-hons-computer-science" : "bsc-maths";
+      const degree_name =
+        degree.degree_title == 'BSc (Hons) Computer Science'
+          ? 'bsc-hons-computer-science'
+          : 'bsc-maths';
       return {
         ...degree,
         modules: degree.modules.map((module) => ({
@@ -19,7 +22,7 @@ try {
     }),
   };
 
-  fs.writeFile(outputPath, JSON.stringify(updated, null, 2), "utf8", () => {
+  fs.writeFile(outputPath, JSON.stringify(updated, null, 2), 'utf8', () => {
     console.log(`Data written to ${outputPath}`);
   });
 } catch (error) {

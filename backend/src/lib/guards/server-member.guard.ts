@@ -67,7 +67,8 @@ export class ServerMemberGuard implements CanActivate {
       .select('_id')
       .lean<Pick<IMembership, '_id'> | null>();
 
-    if (!membership) throw new ForbiddenException('Not a member of this server');
+    if (!membership)
+      throw new ForbiddenException('Not a member of this server');
 
     return true;
   }

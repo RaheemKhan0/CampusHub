@@ -217,7 +217,10 @@ export class MessagesService {
 
     // Partition recipients by status so we can bulk-insert each bucket in
     // one round-trip instead of one call per user.
-    type Bucket = { read: CreateNotificationDto[]; unread: CreateNotificationDto[] };
+    type Bucket = {
+      read: CreateNotificationDto[];
+      unread: CreateNotificationDto[];
+    };
     const buckets: Bucket = { read: [], unread: [] };
 
     const push = (

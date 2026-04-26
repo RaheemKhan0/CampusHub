@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  BookOpen,
   GraduationCap,
   MessageSquareText,
   Users,
@@ -98,7 +97,7 @@ export default function HomePage() {
       <section id="features" className="mx-auto max-w-6xl px-6 pb-16">
         <div className="mb-10 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-primary/70">
-            What's included
+            What&apos;s included
           </p>
           <h2 className="mt-2 text-2xl font-bold">
             Everything your cohort needs

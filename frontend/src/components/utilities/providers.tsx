@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster, toast } from "sonner";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import {
   notification$,
   startNotificationStream,
@@ -239,11 +238,6 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
     <QueryClientProvider client={queryClient}>
       {children}
       <Toaster />
-      <ReactQueryDevtools
-        initialIsOpen={false}
-        buttonPosition="bottom-right"
-        position="bottom"
-      />
     </QueryClientProvider>
   );
 };
